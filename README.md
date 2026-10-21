@@ -160,7 +160,8 @@ src/
   fixtures/companies.ts    four fictional sample companies
   recordings/*.json        recorded runs, replayed by input hash
   ui/                      vanilla TS + DOM, no framework; text set via text nodes only
-  styles/tokens.css        ALL colours, fonts and spacing — swap for the brand
+  styles/tokens.css        kokot.it brand tokens (verbatim copy) + a small app-only block
+  styles/fonts.css         self-hosted Schibsted Grotesk + JetBrains Mono (OFL, src/assets/fonts)
 server/
   app.ts                   127.0.0.1 HTTP API: validate → rules → generate
   llm.ts                   the only module that calls Claude
@@ -188,6 +189,13 @@ de minimis answers), ranking, hashing (FNV reference vectors), recording freshne
 deterministic replay, prompt contents, WCAG AA contrast of every token pair (computed
 from `tokens.css`, so a brand swap that breaks contrast fails the suite), the HTTP API (validation, size limit, hidden error
 details, no model call without a match) and the Claude wrapper against a fake client.
+
+**Brand.** Colours, type, spacing and motion come from the kokot.it brand system: `src/styles/tokens.css`
+is a verbatim copy of `kokot-it/src/styles/tokens.css` followed by a short block of
+grant-assistant layout sizes, and `app.css` uses only those custom properties. To follow a
+brand update, replace the copied part and run `npm test` — the contrast test fails if a new
+colour breaks WCAG AA. Fonts are self-hosted (SIL Open Font License 1.1; licences in
+`src/assets/fonts/`), so the embedded demo makes no third-party requests.
 
 ## Limitations
 

@@ -29,6 +29,7 @@ import {
   formatDate,
 } from './labels';
 import type { AppMode } from './runtime';
+import logoUrl from '../assets/brand/logo.svg';
 
 export interface AppOptions {
   mode: AppMode;
@@ -541,7 +542,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
         h(
           'p',
           { class: 'brand' },
-          h('span', { class: 'brand-mark' }, 'kokot.it'),
+          h('img', { class: 'brand-logo', src: logoUrl, alt: 'kokot.it' }),
           ' / projekty pokazowe',
         ),
         h('h1', {}, 'Asystent wniosku dotacyjnego'),
@@ -599,6 +600,12 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
           CALLS.map((c) => h('li', {}, `${c.name}: `, sourceLinks(c))),
         ),
         h('p', {}, 'Wszystkie przykładowe firmy są fikcyjne. ' + DISCLAIMER),
+        h(
+          'p',
+          { class: 'byline' },
+          'Projekt pokazowy · by ',
+          h('img', { class: 'byline-logo', src: logoUrl, alt: 'kokot.it' }),
+        ),
       ),
     ),
   );

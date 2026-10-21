@@ -95,7 +95,8 @@ describe('recorded mode', () => {
   it('renders model and user text as text, never as markup', () => {
     setField('name', '<img src=x onerror=alert(1)>');
     submit();
-    expect(root.querySelector('img')).toBeNull();
+    expect(root.querySelector('[onerror]')).toBeNull();
+    expect([...root.querySelectorAll('img')].every((i) => i.alt === 'kokot.it')).toBe(true);
     expect(text('.draft-title')).toContain('<img');
   });
 });
