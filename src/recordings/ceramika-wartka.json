@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "fixtureId": "ceramika-wartka",
+  "inputHash": "9430adaf",
+  "bestCallId": "digit-2-2026",
+  "model": "claude-opus-5-5",
+  "source": "prepared",
+  "recordedAt": "2026-10-21",
+  "draft": {
+    "title": "Predykcyjne utrzymanie ruchu pieców tunelowych i automatyczne harmonogramowanie produkcji w Ceramika Wartka",
+    "summary": "Ceramika Wartka Sp. z o.o. wdroży system predykcyjnego utrzymania ruchu pieców tunelowych oraz narzędzie do automatycznego harmonogramowania produkcji. Dig.IT 2/2026 pasuje do profilu firmy, ale dwa warunki — dodatni wynik finansowy i wolny limit de minimis — trzeba potwierdzić przed złożeniem wniosku.",
+    "sections": [
+      {
+        "heading": "Problem i stan obecny",
+        "body": "Piece tunelowe psują się nieprzewidywalnie, a każda awaria zatrzymuje wypał i niszczy partię płytek. Harmonogram produkcji powstaje ręcznie w arkuszu, więc po awarii jego przebudowa trwa godzinami. Firma nie ma danych, które pozwoliłyby planować przeglądy z wyprzedzeniem."
+      },
+      {
+        "heading": "Rozwiązanie i zakres projektu",
+        "body": "1. Opomiarowanie pieców (temperatura, pobór energii, drgania wentylatorów) i zbieranie danych.\n2. Model AI wykrywający oznaki zbliżającej się awarii i alerty dla utrzymania ruchu.\n3. System harmonogramowania produkcji uwzględniający dostępność pieców i zlecenia.\n4. Integracja z obecnym systemem zleceń i szkolenie zespołów (koszt dodatkowy, do 40%)."
+      },
+      {
+        "heading": "Rezultaty i wskaźniki",
+        "body": "Mniej nieplanowanych postojów pieców (wartość bazowa: liczba i czas postojów z ostatnich 12 miesięcy); mniej partii zniszczonych przy awarii; czas przebudowy harmonogramu skrócony z godzin do minut."
+      },
+      {
+        "heading": "Budżet i harmonogram",
+        "body": "Grant do 50% kosztów kwalifikowanych (150–850 tys. zł), refundacja po projekcie, pomoc de minimis. Orientacyjnie: opomiarowanie 2 miesiące, model i harmonogramowanie 4 miesiące, integracja i szkolenia 2 miesiące."
+      }
+    ],
+    "documents": [
+      {
+        "name": "Sprawozdanie finansowe za ostatni zamknięty rok",
+        "note": "Najpierw potwierdź dodatni wynik netto — bez niego firma nie spełnia warunku."
+      },
+      {
+        "name": "Zestawienie pomocy de minimis z ostatnich 3 lat (SUDOP)",
+        "note": "Grant jest pomocą de minimis — musi zmieścić się w wolnym limicie."
+      },
+      {
+        "name": "Wniosek o powierzenie grantu (zał. 2) i oświadczenie dot. sprawozdań (zał. 4)",
+        "note": "Sprawozdania za 5 ostatnich z 22 zamkniętych lat obrotowych."
+      },
+      {
+        "name": "3 oferty cenowe",
+        "note": "Na opomiarowanie, model predykcyjny i system harmonogramowania — zbierz przed 2 listopada 2026."
+      },
+      {
+        "name": "Upoważnienie BIG InfoMonitor i BIK (zał. 5) oraz oświadczenie o dokumentacji papierowej (zał. 6)",
+        "note": "Wzory w dokumentacji konkursu."
+      }
+    ],
+    "openQuestions": [
+      "Dodatni wynik finansowy: brak danych o wyniku netto za ostatni zamknięty rok — sprawdź w sprawozdaniu.",
+      "Wolny limit pomocy de minimis: sprawdź pomoc z ostatnich 3 lat w SUDOP — grant musi zmieścić się w limicie."
+    ]
+  }
+}

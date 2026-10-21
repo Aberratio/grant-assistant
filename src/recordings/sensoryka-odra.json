@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "fixtureId": "sensoryka-odra",
+  "inputHash": "b9aca4fa",
+  "bestCallId": "innowacje-dla-step",
+  "model": "claude-opus-5-5",
+  "source": "prepared",
+  "recordedAt": "2026-10-21",
+  "draft": {
+    "title": "Model AI do predykcji awarii wrzecion CNC na podstawie sygnału drgań — usługa B+R dla Sensoryka Odra",
+    "summary": "Sensoryka Odra Sp. z o.o. zleci jednostce naukowej badania nad modelem AI, który z sygnału drgań przewiduje awarię wrzeciona obrabiarki CNC z kilkudniowym wyprzedzeniem. Bon B+R z programu Innowacje dla STEP pokrywa 80% wartości usługi badawczej; wynik zasili produkt firmy — czujniki drgań dla zakładów produkcyjnych.",
+    "sections": [
+      {
+        "heading": "Problem badawczy",
+        "body": "Nieplanowane awarie wrzecion w obrabiarkach CNC zatrzymują produkcję i są kosztowne w naprawie. Czujniki drgań firmy zbierają sygnał, ale nie istnieje zweryfikowana metoda, która z tego sygnału wiarygodnie przewiduje awarię z wyprzedzeniem kilku dni przy niskim odsetku fałszywych alarmów."
+      },
+      {
+        "heading": "Zakres usługi B+R",
+        "body": "1. Przegląd metod i przygotowanie zbioru danych drgań z oznaczonymi awariami.\n2. Opracowanie i porównanie modeli predykcyjnych (cechy widmowe, modele sekwencyjne).\n3. Walidacja na danych z hal klientów, w warunkach rzeczywistych.\n4. Raport z wynikami, ograniczeniami i rekomendacją wdrożenia.\nWykonawcą będzie uczelnia lub instytut naukowy — firma wybierze go podczas doradztwa ARAW."
+      },
+      {
+        "heading": "Rezultaty",
+        "body": "Zwalidowany model z określoną skutecznością wykrywania i wyprzedzeniem predykcji; raport badawczy; decyzja o wdrożeniu modelu w produkcie. Wskaźniki docelowe (np. czułość, odsetek fałszywych alarmów) firma ustali z jednostką naukową."
+      },
+      {
+        "heading": "Budżet i harmonogram",
+        "body": "Bon do 200 tys. euro; dofinansowanie 80% wartości usługi badawczej, wkład własny 20%. Przed wnioskiem obowiązkowe bezpłatne doradztwo (15 h). Orientacyjnie: doradztwo i wybór jednostki 1–2 miesiące, badania 6–9 miesięcy."
+      }
+    ],
+    "documents": [
+      {
+        "name": "Potwierdzenie udziału w programie doradczym (15 h konsultacji)",
+        "note": "Zapisz się od razu — liczba miejsc jest ograniczona, a bez doradztwa nie ma wniosku."
+      },
+      {
+        "name": "Opis usługi badawczej i jej wykonawcy",
+        "note": "Zakres z tego szkicu plus oferta i kompetencje wybranej jednostki naukowej."
+      },
+      {
+        "name": "Oświadczenie o statusie MŚP",
+        "note": "Mała firma — status MŚP spełniony."
+      },
+      {
+        "name": "Dokumenty rejestrowe z siedzibą na Dolnym Śląsku",
+        "note": "Wyciąg z KRS potwierdzający siedzibę we Wrocławiu."
+      }
+    ],
+    "openQuestions": [
+      "Ujemny wynik netto nie blokuje bonu, ale sprawdź w regulaminie wymogi dotyczące sytuacji finansowej i wkładu własnego.",
+      "Firma nie wie, ile wykorzystała pomocy de minimis — sprawdź w SUDOP, czy bon nie jest pomocą de minimis lub publiczną z limitem.",
+      "Ścieżka SMART MŚP (PARP) też pasuje — rozważ ją jako następny krok, gdy wyniki badań uzasadnią wdrożenie."
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "fixtureId": "kowadlo-precyzja",
+  "inputHash": "5a770ab6",
+  "bestCallId": "digit-2-2026",
+  "model": "claude-opus-5-5",
+  "source": "prepared",
+  "recordedAt": "2026-10-21",
+  "draft": {
+    "title": "Wizyjna kontrola jakości z AI zintegrowana z ERP na liniach tłoczenia w Kowadło Precyzja",
+    "summary": "Kowadło Precyzja Sp. z o.o. wdroży system wizyjnej kontroli jakości oparty na AI na dwóch liniach tłoczenia i połączy go z ERP. Projekt zastąpi ręczną, wyrywkową kontrolę badaniem 100% detali i automatycznym raportowaniem przyczyn wad, co ma obniżyć liczbę reklamacji i koszty braków.",
+    "sections": [
+      {
+        "heading": "Problem i stan obecny",
+        "body": "Firma tłoczy stalowe detale dla producentów AGD na dwóch zmianach. Kontrola jakości jest ręczna i wyrywkowa, więc wady wykrywane są dopiero u klienta, a liczba reklamacji rośnie. Informacje o odrzutach trafiają do ERP z opóźnieniem i bez przyczyny wady, co uniemożliwia analizę i korektę procesu."
+      },
+      {
+        "heading": "Rozwiązanie i zakres projektu",
+        "body": "1. Analiza przedwdrożeniowa: katalog wad, wymagania taktu linii, punkty montażu kamer.\n2. Dostawa i montaż stanowisk wizyjnych (kamery, oświetlenie, komputer przemysłowy) na dwóch liniach.\n3. Trening i walidacja modelu AI klasyfikującego wady na zdjęciach detali z produkcji firmy.\n4. Integracja z ERP: automatyczny zapis odrzutów, przyczyn wad i partii.\n5. Szkolenie operatorów i działu jakości (koszt dodatkowy, w limicie 40%).\nProjekt rozpocznie się dopiero po złożeniu wniosku, zgodnie z regulaminem."
+      },
+      {
+        "heading": "Rezultaty i wskaźniki",
+        "body": "Kontrola 100% detali na dwóch liniach zamiast kontroli wyrywkowej; spadek liczby reklamacji jakościowych (wartość bazowa: liczba reklamacji z ostatnich 12 miesięcy); skrócenie czasu raportowania wad z dni do minut; dane o przyczynach wad dostępne w ERP dla każdej partii. Wartości docelowe firma ustali na podstawie pomiaru bazowego."
+      },
+      {
+        "heading": "Budżet i harmonogram",
+        "body": "Grant Dig.IT pokrywa do 50% kosztów kwalifikowanych (150–850 tys. zł) w formie refundacji po projekcie, więc firma musi zapewnić finansowanie całości na czas realizacji. Wysokość grantu nie może przekroczyć 30% średnich rocznych przychodów netto z 3 lat. Orientacyjny harmonogram: analiza 1 miesiąc, dostawa i montaż 2 miesiące, trening modelu i integracja 3 miesiące, szkolenia i odbiór 1 miesiąc."
+      }
+    ],
+    "documents": [
+      {
+        "name": "Wniosek o powierzenie grantu (zał. 2)",
+        "note": "Opis projektu z tego szkicu, uzupełniony o wartości bazowe wskaźników."
+      },
+      {
+        "name": "Sprawozdania finansowe za 5 zamkniętych lat obrotowych i oświadczenie (zał. 4)",
+        "note": "Firma ma 12 lat obrotowych — wystarczy 5 ostatnich; potwierdzają dodatni wynik."
+      },
+      {
+        "name": "3 oferty cenowe",
+        "note": "Na stanowiska wizyjne, model AI i integrację z ERP — zbierz je przed 2 listopada 2026."
+      },
+      {
+        "name": "Upoważnienie BIG InfoMonitor i BIK (zał. 5) oraz oświadczenie o dokumentacji papierowej (zał. 6)",
+        "note": "Wzory w dokumentacji konkursu na stronie ARP."
+      },
+      {
+        "name": "Zestawienie pomocy de minimis z ostatnich 3 lat",
+        "note": "Z SUDOP — potwierdza, że grant zmieści się w wolnym limicie."
+      }
+    ],
+    "openQuestions": [
+      "Czy wnioskowana kwota mieści się w 30% średnich rocznych przychodów netto z ostatnich 3 lat?",
+      "Czy oferty cenowe rozdzielają koszty podstawowe od dodatkowych (szkolenia, środki trwałe — do 40%)?",
+      "Warunek dodatniego wyniku pochodzi z researchu regulaminu — potwierdź w regulaminie konkursu."
+    ]
+  }
+}

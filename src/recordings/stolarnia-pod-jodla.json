@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "fixtureId": "stolarnia-pod-jodla",
+  "inputHash": "a52da450",
+  "bestCallId": "uslugi-rozwojowe-7-4a",
+  "model": "claude-opus-5-5",
+  "source": "prepared",
+  "recordedAt": "2026-10-21",
+  "draft": {
+    "title": "Szkolenie zespołu Stolarni Pod Jodłą z narzędzi AI do wycen i ofert",
+    "summary": "Stolarnia Pod Jodłą przeszkoli siedmioosobowy zespół z praktycznego użycia narzędzi AI do przygotowania wycen, opisów ofert i prostych wizualizacji mebli. Szkolenie sfinansuje dotacja na usługi rozwojowe 7.4A FEDS (50–70%), a celem jest odciążenie właściciela z wieczornej pracy nad ofertami.",
+    "sections": [
+      {
+        "heading": "Potrzeba rozwojowa",
+        "body": "Wyceny, rysunki i opisy ofert przygotowuje dziś wyłącznie właściciel, po godzinach. To wąskie gardło: klienci czekają na ofertę kilka dni, a część zapytań przepada. Zespół nie zna narzędzi, które mogłyby przejąć część tej pracy."
+      },
+      {
+        "heading": "Zakres usług rozwojowych",
+        "body": "1. Szkolenie z narzędzi AI do tworzenia opisów ofert i korespondencji z klientem.\n2. Warsztat: wycena na podstawie szablonów i danych z wcześniejszych zleceń.\n3. Warsztat: proste wizualizacje i rzuty mebli z pomocą narzędzi AI.\nUsługi trzeba wybrać z Bazy Usług Rozwojowych (BUR) — tylko takie są dofinansowane."
+      },
+      {
+        "heading": "Rezultaty",
+        "body": "Co najmniej dwie osoby poza właścicielem samodzielnie przygotowują ofertę; skrócenie czasu przygotowania oferty (wartość bazowa: obecny średni czas); mniej zapytań bez odpowiedzi. Kompetencje potwierdzone zaświadczeniem z BUR."
+      },
+      {
+        "heading": "Budżet i harmonogram",
+        "body": "Dofinansowanie 50–70%, maksymalnie 10 tys. zł netto na usługę i 28 tys. zł na umowę z operatorem. Szkolenia rozłożone na 2–3 miesiące, poza szczytem sezonu, żeby nie zatrzymywać produkcji."
+      }
+    ],
+    "documents": [
+      {
+        "name": "Konto i profil firmy w Bazie Usług Rozwojowych",
+        "note": "Załóż je przed zgłoszeniem — przez BUR zapisuje się pracowników na usługi."
+      },
+      {
+        "name": "Formularz zgłoszeniowy operatora (DAWG lub partner)",
+        "note": "Operator ocenia zgłoszenie i podpisuje umowę wsparcia."
+      },
+      {
+        "name": "Oświadczenie o statusie MŚP i zestawienie pomocy de minimis",
+        "note": "Mikroprzedsiębiorstwo — status MŚP spełniony."
+      },
+      {
+        "name": "Karty wybranych usług z BUR",
+        "note": "Sprawdź, czy dostawca ma wymagany certyfikat jakości."
+      }
+    ],
+    "openQuestions": [
+      "Czy w BUR są dostępne szkolenia z AI dopasowane do branży meblarskiej, czy trzeba wybrać ogólniejsze?",
+      "Dig.IT 2/2026 nie jest dostępny: firma ma 3 zamknięte lata obrotowe, a wymagane jest 5 — wróć do niego za 2 lata."
+    ]
+  }
+}
