@@ -369,12 +369,20 @@ function noMatchView(assessment: Assessment): HTMLElement {
 }
 
 async function fetchLiveDraft(company: CompanyProfile, signal: AbortSignal) {
-  const res = await fetch('./api/draft', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ company }),
-    signal,
-  });
+  let res: Response;
+  try {
+    res = await fetch('./api/draft', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ company }),
+      signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error;
+    throw new Error('Brak połączenia z lokalnym serwerem API — czy działa npm run dev:live?', {
+      cause: error,
+    });
+  }
   const body = (await res.json().catch(() => ({}))) as {
     draft?: Draft | null;
     model?: string | null;

@@ -65,6 +65,20 @@ describe('design tokens meet WCAG AA (4.5:1 for body text)', () => {
     },
   );
 
+  // WCAG 1.4.11: form-field boundaries need 3:1 against what surrounds them.
+  // app.css draws input borders with --color-text-subtle for this reason.
+  it.each(backgrounds)('form-field border (--color-text-subtle) on %s is at least 3:1', (bg) => {
+    expect(contrast(token('color-text-subtle'), token(bg))).toBeGreaterThanOrEqual(3);
+  });
+
+  it('app.css draws form-field borders with --color-text-subtle', () => {
+    const app = readFileSync(new URL('../src/styles/app.css', import.meta.url), 'utf8');
+    const fieldRule = /\.field input,\s*\.field select,\s*\.field textarea \{([^}]*)\}/.exec(
+      app,
+    )?.[1];
+    expect(fieldRule).toMatch(/border: var\(--border-width\) solid var\(--color-text-subtle\)/);
+  });
+
   it.each(['color-accent', 'color-accent-hover'])('button text on %s', (bg) => {
     expect(contrast(token('color-on-accent'), token(bg))).toBeGreaterThanOrEqual(4.5);
   });
