@@ -9,18 +9,18 @@ import type {
 } from '../domain/types';
 
 export const INDUSTRY_LABEL: Record<Industry, string> = {
-  produkcja: 'Produkcja (przetwórstwo przemysłowe)',
+  produkcja: 'Produkcja',
   uslugi_produkcyjne: 'Usługi produkcyjne',
-  it: 'IT / oprogramowanie',
+  it: 'IT',
   handel: 'Handel',
   uslugi: 'Inne usługi',
 };
 
 export const SIZE_LABEL: Record<CompanySize, string> = {
-  mikro: 'Mikro (do 9 osób)',
-  mala: 'Mała (10–49 osób)',
-  srednia: 'Średnia (50–249 osób)',
-  duza: 'Duża (250+ osób)',
+  mikro: 'Mikro (<10)',
+  mala: 'Mała (10–49)',
+  srednia: 'Średnia (50–249)',
+  duza: 'Duża (250+)',
 };
 
 export const VOIVODESHIP_LABEL: Record<Voivodeship, string> = {
@@ -49,8 +49,8 @@ export const NEED_LABEL: Record<Need, string> = {
 };
 
 export const DE_MINIMIS_LABEL: Record<DeMinimis, string> = {
-  tak: 'Tak, jest wolny limit',
-  nie: 'Nie, limit wykorzystany',
+  tak: 'Tak',
+  nie: 'Nie (wykorzystany)',
   nie_wiem: 'Nie wiem',
 };
 

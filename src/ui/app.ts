@@ -10,6 +10,7 @@ import {
   NEEDS,
   VOIVODESHIPS,
   type CallMatch,
+  type ConditionResult,
   type CompanyProfile,
 } from '../domain/types';
 import { FIXTURES } from '../fixtures/companies';
@@ -181,11 +182,11 @@ function showErrors(form: HTMLFormElement, errors: Partial<Record<string, string
   first?.focus();
 }
 
-function conditionList(match: CallMatch): HTMLElement {
+function conditionList(conditions: readonly ConditionResult[]): HTMLElement {
   return h(
     'ul',
     { class: 'conditions' },
-    match.conditions.map((c) =>
+    conditions.map((c) =>
       h(
         'li',
         { class: `condition condition--${c.status}` },
@@ -208,6 +209,33 @@ function conditionList(match: CallMatch): HTMLElement {
 
 function matchCard(match: CallMatch, isBest: boolean): HTMLElement {
   const call = getCall(match.callId);
+  const compact = match.status === 'ineligible';
+  const meta = h(
+    'dl',
+    { class: 'match-meta' },
+    h('dt', {}, 'Nabór'),
+    h('dd', {}, call.window),
+    h('dt', {}, 'Finansowanie'),
+    h('dd', {}, call.funding),
+  );
+  const notes = [
+    h(
+      'ul',
+      {},
+      call.notes.map((n) => h('li', {}, n)),
+    ),
+    h(
+      'p',
+      { class: 'sources' },
+      'Źródła: ',
+      call.sources.flatMap((s, i) => [
+        i > 0 ? ' · ' : '',
+        h('a', { href: s.url, target: '_blank', rel: 'noopener noreferrer' }, s.label),
+      ]),
+    ),
+  ];
+  const stateAsOf = `stan na ${formatDate(call.stateAsOf)}`;
+
   return h(
     'article',
     { class: `match match--${match.status}${isBest ? ' match--best' : ''}` },
@@ -223,34 +251,28 @@ function matchCard(match: CallMatch, isBest: boolean): HTMLElement {
       ),
       h('span', { class: `badge badge--${match.status}` }, MATCH_LABEL[match.status]),
     ),
-    h(
-      'dl',
-      { class: 'match-meta' },
-      h('dt', {}, 'Nabór'),
-      h('dd', {}, call.window),
-      h('dt', {}, 'Finansowanie'),
-      h('dd', {}, call.funding),
-    ),
-    conditionList(match),
-    h(
-      'details',
-      { class: 'match-notes' },
-      h('summary', {}, `Uwagi i źródła (stan na ${formatDate(call.stateAsOf)})`),
-      h(
-        'ul',
-        {},
-        call.notes.map((n) => h('li', {}, n)),
-      ),
-      h(
-        'p',
-        { class: 'sources' },
-        'Źródła: ',
-        call.sources.flatMap((s, i) => [
-          i > 0 ? ' · ' : '',
-          h('a', { href: s.url, target: '_blank', rel: 'noopener noreferrer' }, s.label),
-        ]),
-      ),
-    ),
+    compact
+      ? [
+          conditionList(match.conditions.filter((c) => c.status === 'unmet')),
+          h(
+            'details',
+            { class: 'match-notes' },
+            h('summary', {}, `Wszystkie warunki, uwagi i źródła (${stateAsOf})`),
+            meta,
+            conditionList(match.conditions),
+            notes,
+          ),
+        ]
+      : [
+          meta,
+          conditionList(match.conditions),
+          h(
+            'details',
+            { class: 'match-notes' },
+            h('summary', {}, `Uwagi i źródła (${stateAsOf})`),
+            notes,
+          ),
+        ],
   );
 }
 

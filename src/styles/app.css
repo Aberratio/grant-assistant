@@ -312,11 +312,10 @@ p {
 }
 
 .match-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: var(--space-3);
-  flex-wrap: wrap;
 }
 
 .match-header h3 {
