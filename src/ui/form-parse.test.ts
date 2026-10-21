@@ -58,7 +58,10 @@ describe('parseCompany', () => {
     ['industry', 'rolnictwo'],
     ['size', ''],
     ['name', '   '],
-  ])('reports an error for %s = %j', (field, value) => {
+    ['name', 'x'.repeat(121)],
+    ['description', 'x'.repeat(2001)],
+    ['closedFiscalYears', '201'],
+  ])('reports an error for %s (case %#)', (field, value) => {
     const result = parseCompany(entries({ [field]: value }));
     expect(result.ok).toBe(false);
     expect(!result.ok && Object.keys(result.errors)).toContain(field);

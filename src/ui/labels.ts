@@ -60,7 +60,7 @@ export const MATCH_LABEL: Record<MatchStatus, string> = {
   ineligible: 'Nie spełnia warunków',
 };
 
-export const CONDITION_ICON: Record<ConditionStatus, { symbol: string; label: string }> = {
+export const CONDITION_MARK: Record<ConditionStatus, { symbol: string; label: string }> = {
   met: { symbol: '✓', label: 'spełniony' },
   unmet: { symbol: '✕', label: 'niespełniony' },
   uncertain: { symbol: '?', label: 'do sprawdzenia' },

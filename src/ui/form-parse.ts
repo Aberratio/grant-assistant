@@ -2,6 +2,7 @@ import {
   COMPANY_SIZES,
   DE_MINIMIS,
   INDUSTRIES,
+  LIMITS,
   NEEDS,
   VOIVODESHIPS,
   type CompanyProfile,
@@ -29,6 +30,13 @@ export function parseCompany(entries: FormEntries): ParseResult {
   const errors: Partial<Record<keyof CompanyProfile, string>> = {};
   const name = entries.name.trim();
   if (!name) errors.name = 'Podaj nazwę firmy.';
+  else if (name.length > LIMITS.nameMaxLength) {
+    errors.name = `Nazwa może mieć najwyżej ${LIMITS.nameMaxLength} znaków.`;
+  }
+  const description = entries.description.trim();
+  if (description.length > LIMITS.descriptionMaxLength) {
+    errors.description = `Opis może mieć najwyżej ${LIMITS.descriptionMaxLength} znaków.`;
+  }
 
   const industry = oneOf(INDUSTRIES, entries.industry);
   if (!industry) errors.industry = 'Wybierz branżę.';
@@ -42,7 +50,7 @@ export function parseCompany(entries: FormEntries): ParseResult {
   if (!need) errors.need = 'Wybierz potrzebę.';
 
   const years = entries.closedFiscalYears.trim() === '' ? NaN : Number(entries.closedFiscalYears);
-  if (!Number.isInteger(years) || years < 0 || years > 200) {
+  if (!Number.isInteger(years) || years < 0 || years > LIMITS.maxClosedFiscalYears) {
     errors.closedFiscalYears = 'Podaj liczbę całkowitą lat (0 lub więcej).';
   }
 
@@ -71,7 +79,7 @@ export function parseCompany(entries: FormEntries): ParseResult {
       netResultPln,
       deMinimisAvailable,
       need,
-      description: entries.description.trim(),
+      description,
     },
   };
 }

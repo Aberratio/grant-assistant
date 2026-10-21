@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { assess } from '../src/domain/rules';
 import { getFixture } from '../src/fixtures/companies';
 import { HttpError } from './app';
@@ -16,6 +16,10 @@ function fakeClient(parse: (...args: unknown[]) => Promise<unknown>) {
     beta: { messages: { parse: ReturnType<typeof vi.fn> } };
   };
 }
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe('createGenerator', () => {
   it('asks Claude Opus 5.5 for a structured draft with the fixed system prompt', async () => {
@@ -58,7 +62,18 @@ describe('createGenerator', () => {
     });
   });
 
+  it('passes other client-side SDK errors through when a key is configured', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', 'test-key-not-real');
+    const client = fakeClient(async () => {
+      throw new Anthropic.AnthropicError('Some other client-side problem.');
+    });
+    await expect(createGenerator(client)(company, assessment)).rejects.not.toBeInstanceOf(
+      HttpError,
+    );
+  });
+
   it('explains missing credentials (client-side SDK error, no HTTP call made)', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', '');
     const client = fakeClient(async () => {
       throw new Anthropic.AnthropicError('Could not resolve authentication method.');
     });

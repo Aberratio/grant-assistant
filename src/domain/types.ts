@@ -32,6 +32,13 @@ export type Need = (typeof NEEDS)[number];
 export const DE_MINIMIS = ['tak', 'nie', 'nie_wiem'] as const;
 export type DeMinimis = (typeof DE_MINIMIS)[number];
 
+/** Input limits shared by the form (client) and the API schema (server). */
+export const LIMITS = {
+  nameMaxLength: 120,
+  descriptionMaxLength: 2000,
+  maxClosedFiscalYears: 200,
+} as const;
+
 export interface CompanyProfile {
   name: string;
   industry: Industry;
