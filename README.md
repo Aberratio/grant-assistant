@@ -95,10 +95,11 @@ and commit. Each recording stores a hash of its input **and of the rule result**
 suite fails if a rule, call or fixture change makes a recording stale, so an outdated draft
 can never be replayed silently.
 
-> The recordings committed today are marked `source: "prepared"`: they were written offline
-> (no API key was available when the demo was built) in the exact shape the live mode
-> returns, and the UI labels them as such. Run `npm run record` with a key to replace them
-> with captured runs.
+> The recordings committed today are marked `source: "prepared"` with `model: null`: they
+> were written offline (no API key was available when the demo was built) in the exact shape
+> the live mode returns and under the same rules as the live prompt — only facts from the
+> input and the call data, unknowns left as `[…]` placeholders. The UI labels them as
+> prepared. Run `npm run record` with a key to replace them with captured runs.
 
 ### Embedding (kokot.it case study)
 
@@ -171,7 +172,8 @@ not ineligible; no draft is generated when nothing matches.
 
 **Tests.** Rule boundaries (4 vs 5 years; result −1 / 0 / 1 / unknown; every sector and size;
 de minimis answers), ranking, hashing (FNV reference vectors), recording freshness and
-deterministic replay, prompt contents, the HTTP API (validation, size limit, hidden error
+deterministic replay, prompt contents, WCAG AA contrast of every token pair (computed
+from `tokens.css`, so a brand swap that breaks contrast fails the suite), the HTTP API (validation, size limit, hidden error
 details, no model call without a match) and the Claude wrapper against a fake client.
 
 ## Limitations
