@@ -42,6 +42,13 @@ export function createGenerator(client: Anthropic = new Anthropic()): GenerateDr
       if (error instanceof Anthropic.RateLimitError) {
         throw new HttpError(429, 'Limit zapytań do API — spróbuj za chwilę.');
       }
+      if (error instanceof Anthropic.AnthropicError && !(error instanceof Anthropic.APIError)) {
+        // Raised by the SDK before any HTTP call — in practice: no credentials configured.
+        throw new HttpError(
+          500,
+          'Brak ANTHROPIC_API_KEY — skopiuj .env.example do .env i dodaj klucz.',
+        );
+      }
       throw error;
     }
   };

@@ -58,6 +58,16 @@ describe('createGenerator', () => {
     });
   });
 
+  it('explains missing credentials (client-side SDK error, no HTTP call made)', async () => {
+    const client = fakeClient(async () => {
+      throw new Anthropic.AnthropicError('Could not resolve authentication method.');
+    });
+    await expect(createGenerator(client)(company, assessment)).rejects.toMatchObject({
+      status: 500,
+      message: expect.stringContaining('ANTHROPIC_API_KEY'),
+    });
+  });
+
   it('maps rate limiting to 429', async () => {
     const client = fakeClient(async () => {
       throw new Anthropic.RateLimitError(429, undefined, 'rate limited', new Headers());
