@@ -106,6 +106,26 @@ describe('embed mode', () => {
     mountApp(root, { mode: 'recorded', embed: true });
     expect(document.documentElement.dataset['embed']).toBe('1');
     expect(text('.disclaimer')).toMatch(/nie porada prawna/);
+    expect($$('.site-footer a').length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('reports its height to the parent page for iframe auto-sizing', () => {
+    const postMessage = vi.fn();
+    vi.stubGlobal('parent', { postMessage });
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(private readonly callback: () => void) {}
+        observe() {
+          this.callback();
+        }
+      },
+    );
+    mountApp(root, { mode: 'recorded', embed: true });
+    expect(postMessage).toHaveBeenCalledWith(
+      { type: 'grant-assistant:height', height: expect.any(Number) },
+      '*',
+    );
   });
 });
 
@@ -135,6 +155,15 @@ describe('live mode', () => {
     await vi.waitFor(() => expect(text('.origin')).toContain('Na żywo — claude-opus-5-5'));
     expect(text('.draft-title')).toBe(recording.draft.title);
     expect($('.draft-panel')!.getAttribute('aria-busy')).toBe('false');
+  });
+
+  it('explains a network failure in Polish', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    mountApp(root, { mode: 'live', embed: false });
+    submit();
+    await vi.waitFor(() =>
+      expect(text('[role="alert"]')).toContain('Brak połączenia z lokalnym serwerem API'),
+    );
   });
 
   it('shows the server error message', async () => {
