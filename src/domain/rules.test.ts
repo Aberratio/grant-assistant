@@ -175,6 +175,12 @@ describe('Usługi rozwojowe 7.4A FEDS eligibility', () => {
     expect(feds({ voivodeship: 'dolnoslaskie', need: 'szkolenia' }).status).toBe('eligible');
   });
 
+  it('rejects a large enterprise', () => {
+    expect(feds({ voivodeship: 'dolnoslaskie', need: 'szkolenia', size: 'duza' }).status).toBe(
+      'ineligible',
+    );
+  });
+
   it('rejects a company outside Lower Silesia', () => {
     expect(feds({ voivodeship: 'slaskie', need: 'szkolenia' }).status).toBe('ineligible');
   });

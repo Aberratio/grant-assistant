@@ -46,6 +46,33 @@ describe('hashAssessmentInput', () => {
     expect(hashAssessmentInput(edited, assess(edited).best)).not.toBe(before);
   });
 
+  it('changes when any single company field changes', () => {
+    const before = hashAssessmentInput(company, assess(company).best);
+    const edits: Partial<typeof company>[] = [
+      { name: company.name + 'x' },
+      { industry: 'uslugi_produkcyjne' },
+      { size: 'srednia' },
+      { voivodeship: 'slaskie' },
+      { closedFiscalYears: company.closedFiscalYears + 1 },
+      { netResultPln: null },
+      { deMinimisAvailable: 'nie_wiem' },
+      { need: 'szkolenia' },
+    ];
+    for (const edit of edits) {
+      const edited = { ...company, ...edit };
+      expect(hashAssessmentInput(edited, assess(edited).best), JSON.stringify(edit)).not.toBe(
+        before,
+      );
+    }
+  });
+
+  it('changes when the matched call data changes (the model and recordings quote it)', () => {
+    const best = assess(company).best!;
+    const call = getCall(best.callId);
+    const edited = { ...call, funding: call.funding + ' (zmiana)' };
+    expect(hashAssessmentInput(company, best, edited)).not.toBe(hashAssessmentInput(company, best));
+  });
+
   it('changes when the rule result changes for the same company', () => {
     const best = assess(company).best!;
     const altered = { ...best, conditions: best.conditions.slice(1) };
@@ -93,6 +120,13 @@ describe('buildTimeline', () => {
 });
 
 describe('templateDraft', () => {
+  it('leaves a placeholder for an empty description and has no questions when nothing is uncertain', () => {
+    const company = { ...FIXTURES[0]!.company, description: '   ' };
+    const draft = templateDraft(company, assess(company))!;
+    expect(draft.sections[0]!.body).toContain('[opisz planowany projekt');
+    expect(draft.openQuestions).toEqual([]);
+  });
+
   it('returns null when nothing matches', () => {
     const company = { ...FIXTURES[0]!.company, size: 'duza' as const };
     expect(templateDraft(company, assess(company))).toBeNull();

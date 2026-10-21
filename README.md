@@ -12,6 +12,18 @@ obrotowych”. Model Claude dostaje wynik reguł i pisze szkic opisu projektu or
 dokumentów. To nie jest porada prawna ani gwarancja dotacji; dane naborów ze stanu na
 21.10.2026, z linkami do źródeł.
 
+## Funding-call data (as of 2026-10-21)
+
+| Call                                          | Operator          | Source                                                                                                                                                                                                                                                          |
+| --------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dig.IT Transformacja cyfrowa — konkurs 2/2026 | ARP               | [digit.arp.pl](https://digit.arp.pl/eventy/nabory/digit-konkurs-22026/), [nowoczesnagospodarka.gov.pl](https://nowoczesnagospodarka.gov.pl/aktualnosci-1-40-mln-na-cyfryzacje-polskich-firm-2-listopada-rusza-drugi-nabor-w-projekcie-dig-it-transformacja-cy/) |
+| Innowacje dla STEP — bony B+R                 | ARAW, FEDS        | [wroclaw.pl](https://www.wroclaw.pl/przedsiebiorczy-wroclaw/innowacje-dla-step-granty-dla-firm-dolny-slask)                                                                                                                                                     |
+| Usługi rozwojowe 7.4A FEDS (BUR)              | DAWG and partners | [dawg.pl](https://dawg.pl/projekty/dotacje-na-uslugi-rozwojowe-dla-dolnoslskich-firm/)                                                                                                                                                                          |
+| Ścieżka SMART MŚP — FENG.01.01-IP.02-003/26   | PARP              | [parp.gov.pl (PDF)](https://www.parp.gov.pl/storage/grants/documents/743/ogloszenie_naboru.pdf)                                                                                                                                                                 |
+
+The same links are shown in the app, per call and in the footer. Facts were checked on these
+pages on 2026-10-21 and may have changed since.
+
 ## Problem
 
 Small manufacturers hear about EU grants (e.g. ARP's Dig.IT 2/2026, call 2–30 Nov 2026) but
@@ -91,8 +103,8 @@ npm run record -- kowadlo-precyzja   # one company
 
 `record` runs the live pipeline for the fixtures in `src/fixtures/companies.ts` and overwrites
 `src/recordings/<id>.json` with `source: "api"`, the model id and the date. Review the diff
-and commit. Each recording stores a hash of its input **and of the rule result**; the test
-suite fails if a rule, call or fixture change makes a recording stale, so an outdated draft
+and commit. Each recording stores a hash of its input, **the rule result and the matched call's
+data**; the test suite fails if a rule, call or fixture change makes a recording stale, so an outdated draft
 can never be replayed silently.
 
 > The recordings committed today are marked `source: "prepared"` with `model: null`: they
@@ -121,7 +133,8 @@ can never be replayed silently.
 </script>
 ```
 
-`?embed=1` hides the page header and footer; the disclaimer and the mode badge stay visible.
+`?embed=1` hides the page header; the disclaimer, the mode badge and the footer with the
+source links stay visible.
 
 ### Quality gates
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { getCall } from '../data/calls';
 import { DraftSchema } from '../domain/draft-schema';
 import { hashAssessmentInput } from '../domain/hash';
 import { assess } from '../domain/rules';
@@ -31,6 +32,8 @@ describe('recorded runs', () => {
     it('names the company and the matched call', () => {
       const text = JSON.stringify(recording.draft);
       expect(text).toContain(fixture.company.name.replace(' (fikcyjna)', ''));
+      const callShortName = getCall(recording.bestCallId).name.split(' ')[0]!;
+      expect(text).toContain(callShortName);
     });
 
     it('replays identically every time', () => {

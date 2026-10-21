@@ -84,6 +84,11 @@ export function createApiServer(options: ApiOptions): Server {
       if (path === '/api/health') return send(res, 200, { ok: true, mode: 'live' });
       if (path !== '/api/draft') throw new HttpError(404, 'Nie znaleziono.');
       if (req.method !== 'POST') throw new HttpError(405, 'Dozwolona metoda: POST.');
+      // JSON only: a cross-site "simple" (text/plain) POST cannot get here without a
+      // CORS preflight, which this server never answers.
+      if (!/^application\/json\b/i.test(req.headers['content-type'] ?? '')) {
+        throw new HttpError(415, 'Wymagany Content-Type: application/json.');
+      }
       await handleDraft(req, res, options);
     };
     run().catch((error: unknown) => {

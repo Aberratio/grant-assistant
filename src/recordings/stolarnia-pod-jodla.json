@@ -1,7 +1,7 @@
 {
   "version": 1,
   "fixtureId": "stolarnia-pod-jodla",
-  "inputHash": "a52da450",
+  "inputHash": "23ec2777",
   "bestCallId": "uslugi-rozwojowe-7-4a",
   "model": null,
   "source": "prepared",
@@ -12,7 +12,7 @@
     "sections": [
       {
         "heading": "Potrzeba rozwojowa",
-        "body": "Firma (7 osób) robi meble na wymiar. Wyceny i rysunki przygotowuje właściciel, wieczorami — to obciąża go i wydłuża odpowiedź dla klienta. Zespół ma nauczyć się korzystać z narzędzi AI przy wycenach, opisach ofert i prostych wizualizacjach.\n\n[Uzupełnij: ile ofert miesięcznie przygotowuje firma i ile trwa przygotowanie jednej.]"
+        "body": "Firma (7 osób) robi meble na wymiar. Wyceny i rysunki przygotowuje właściciel, wieczorami. Zespół ma nauczyć się korzystać z narzędzi AI przy wycenach, opisach ofert i prostych wizualizacjach.\n\n[Uzupełnij: ile ofert miesięcznie przygotowuje firma i ile trwa przygotowanie jednej.]"
       },
       {
         "heading": "Zakres usług rozwojowych",
