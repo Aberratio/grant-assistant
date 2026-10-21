@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
-import { createApiServer, type GenerateDraft } from './app';
+import { createApiServer, HttpError, type GenerateDraft } from './app';
 import { getFixture } from '../src/fixtures/companies';
 import { getRecordingDraft } from './test-helpers';
 
@@ -68,6 +68,29 @@ describe('POST /api/draft', () => {
     const res = await post(base, body);
     expect(res.status).toBe(400);
     expect(generate).not.toHaveBeenCalled();
+  });
+
+  // A cross-site page can send a "simple" text/plain POST without a CORS preflight;
+  // requiring application/json forces a preflight this server never answers.
+  it('rejects non-JSON content types with 415 without calling the model', async () => {
+    const generate = vi.fn<GenerateDraft>();
+    const base = await start(generate);
+    const res = await fetch(`${base}/api/draft`, {
+      method: 'POST',
+      headers: { 'content-type': 'text/plain' },
+      body: JSON.stringify({ company }),
+    });
+    expect(res.status).toBe(415);
+    expect(generate).not.toHaveBeenCalled();
+  });
+
+  it('passes an HttpError status from the generator through to the client', async () => {
+    const base = await start(
+      vi.fn<GenerateDraft>().mockRejectedValue(new HttpError(429, 'Limit zapytań')),
+    );
+    const res = await post(base, { company });
+    expect(res.status).toBe(429);
+    expect(await res.json()).toEqual({ error: 'Limit zapytań' });
   });
 
   it('rejects a body over 16 kB with 413', async () => {

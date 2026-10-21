@@ -11,6 +11,22 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
   {
+    // Browser code must never pull in the server, the SDK or the key-holding modules.
+    files: ['src/**/*.ts'],
+    ignores: ['src/**/*.test.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            { group: ['**/server/**', '../../server/*'], message: 'src/ is browser code.' },
+            { group: ['@anthropic-ai/sdk', '@anthropic-ai/sdk/*'], message: 'SDK is server-only.' },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.test.ts'],
     rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
   },

@@ -75,7 +75,11 @@ describe('createGenerator', () => {
   it('explains missing credentials (client-side SDK error, no HTTP call made)', async () => {
     vi.stubEnv('ANTHROPIC_API_KEY', '');
     const client = fakeClient(async () => {
-      throw new Anthropic.AnthropicError('Could not resolve authentication method.');
+      // What @anthropic-ai/sdk 0.137 actually throws with no credentials: a plain Error,
+      // raised before any HTTP request (verified with a probe during review).
+      throw new Error(
+        'Could not resolve authentication method. Expected one of apiKey, authToken, ...',
+      );
     });
     await expect(createGenerator(client)(company, assessment)).rejects.toMatchObject({
       status: 500,

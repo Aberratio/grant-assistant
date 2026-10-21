@@ -34,33 +34,33 @@ h1,
 h2,
 h3,
 h4 {
-  line-height: 1.25;
+  line-height: var(--line-height-tight);
   margin: 0 0 var(--space-3);
 }
 
 h1 {
   font-size: var(--font-size-xl);
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight);
 }
 
 h2 {
   font-size: var(--font-size-sm);
   font-family: var(--font-mono);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--letter-spacing-caps);
   color: var(--color-text-muted);
 }
 
 h3 {
   font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 h4 {
   font-size: var(--font-size-md);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-accent);
 }
 
@@ -250,6 +250,11 @@ p {
   resize: vertical;
 }
 
+.field ::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
 .field [aria-invalid='true'] {
   border-color: var(--color-error);
 }
@@ -272,7 +277,7 @@ p {
 
 .btn-primary {
   font: inherit;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-accent-contrast);
   background: var(--color-accent);
   border: 0;
@@ -331,7 +336,7 @@ p {
   font-family: var(--font-mono);
   font-size: var(--font-size-xs);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--letter-spacing-caps);
   color: var(--color-accent);
   margin-bottom: var(--space-1);
 }
@@ -390,7 +395,7 @@ p {
 
 .condition-icon {
   font-family: var(--font-mono);
-  font-weight: 700;
+  font-weight: var(--font-weight-bold);
   text-align: center;
 }
 
@@ -407,7 +412,7 @@ p {
 }
 
 .condition-label {
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   margin-right: var(--space-2);
 }
 
@@ -478,7 +483,7 @@ p {
 
 .documents strong {
   display: block;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .doc-note {
@@ -532,9 +537,9 @@ p {
   padding-left: var(--space-5);
 }
 
-/* Embed (?embed=1): minimal chrome for the kokot.it iframe. The disclaimer stays. */
-[data-embed='1'] .site-header,
-[data-embed='1'] .site-footer {
+/* Embed (?embed=1): minimal chrome for the kokot.it iframe. The page header goes;
+   the disclaimer and the footer with the source links stay. */
+[data-embed='1'] .site-header {
   display: none;
 }
 

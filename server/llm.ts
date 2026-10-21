@@ -43,12 +43,9 @@ export function createGenerator(client: Anthropic = new Anthropic()): GenerateDr
         throw new HttpError(429, 'Limit zapytań do API — spróbuj za chwilę.');
       }
       const noKey = !process.env['ANTHROPIC_API_KEY']?.trim();
-      if (
-        noKey &&
-        error instanceof Anthropic.AnthropicError &&
-        !(error instanceof Anthropic.APIError)
-      ) {
-        // Raised by the SDK before any HTTP call while no key is configured.
+      if (noKey && !(error instanceof Anthropic.APIError)) {
+        // With no credentials the SDK fails before any HTTP call, with a plain Error
+        // (not an APIError), so an unanswered request plus no key means: missing key.
         throw new HttpError(
           500,
           'Brak ANTHROPIC_API_KEY — skopiuj .env.example do .env i dodaj klucz.',
