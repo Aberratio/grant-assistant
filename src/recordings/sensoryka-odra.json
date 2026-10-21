@@ -3,52 +3,52 @@
   "fixtureId": "sensoryka-odra",
   "inputHash": "b9aca4fa",
   "bestCallId": "innowacje-dla-step",
-  "model": "claude-opus-5-5",
+  "model": null,
   "source": "prepared",
   "recordedAt": "2026-10-21",
   "draft": {
-    "title": "Model AI do predykcji awarii wrzecion CNC na podstawie sygnału drgań — usługa B+R dla Sensoryka Odra",
-    "summary": "Sensoryka Odra Sp. z o.o. zleci jednostce naukowej badania nad modelem AI, który z sygnału drgań przewiduje awarię wrzeciona obrabiarki CNC z kilkudniowym wyprzedzeniem. Bon B+R z programu Innowacje dla STEP pokrywa 80% wartości usługi badawczej; wynik zasili produkt firmy — czujniki drgań dla zakładów produkcyjnych.",
+    "title": "Badania nad modelem AI przewidującym awarie wrzecion CNC z sygnału drgań — usługa B+R dla Sensoryka Odra",
+    "summary": "Sensoryka Odra Sp. z o.o., producent czujników drgań do maszyn CNC, planuje zlecić jednostce naukowej badania nad modelem AI, który z sygnału drgań przewiduje awarię wrzeciona z wyprzedzeniem kilku dni. Bon B+R z programu Innowacje dla STEP pokrywa 80% wartości usługi badawczej.",
     "sections": [
       {
         "heading": "Problem badawczy",
-        "body": "Nieplanowane awarie wrzecion w obrabiarkach CNC zatrzymują produkcję i są kosztowne w naprawie. Czujniki drgań firmy zbierają sygnał, ale nie istnieje zweryfikowana metoda, która z tego sygnału wiarygodnie przewiduje awarię z wyprzedzeniem kilku dni przy niskim odsetku fałszywych alarmów."
+        "body": "Firma buduje czujniki drgań do maszyn CNC. Chce opracować model AI, który na podstawie sygnału drgań przewiduje awarię wrzeciona z wyprzedzeniem kilku dni. Potrzebne są badania nad danymi prowadzone z uczelnią oraz walidacja na halach klientów.\n\n[Uzupełnij: jakie dane drgań firma już zebrała i z ilu maszyn.]"
       },
       {
         "heading": "Zakres usługi B+R",
-        "body": "1. Przegląd metod i przygotowanie zbioru danych drgań z oznaczonymi awariami.\n2. Opracowanie i porównanie modeli predykcyjnych (cechy widmowe, modele sekwencyjne).\n3. Walidacja na danych z hal klientów, w warunkach rzeczywistych.\n4. Raport z wynikami, ograniczeniami i rekomendacją wdrożenia.\nWykonawcą będzie uczelnia lub instytut naukowy — firma wybierze go podczas doradztwa ARAW."
+        "body": "1. Przygotowanie zbioru danych drgań z oznaczonymi awariami.\n2. Opracowanie i porównanie modeli predykcyjnych.\n3. Walidacja modelu na danych z hal klientów.\n4. Raport z wynikami i ograniczeniami modelu.\n\n[Uzupełnij: jednostka naukowa wykonująca usługę i jej oferta.]"
       },
       {
         "heading": "Rezultaty",
-        "body": "Zwalidowany model z określoną skutecznością wykrywania i wyprzedzeniem predykcji; raport badawczy; decyzja o wdrożeniu modelu w produkcie. Wskaźniki docelowe (np. czułość, odsetek fałszywych alarmów) firma ustali z jednostką naukową."
+        "body": "Zwalidowany model przewidujący awarię wrzeciona z określonym wyprzedzeniem i skutecznością; raport badawczy będący podstawą decyzji o wdrożeniu w produkcie.\n\n[Uzupełnij: docelowe wyprzedzenie predykcji i dopuszczalny odsetek fałszywych alarmów.]"
       },
       {
         "heading": "Budżet i harmonogram",
-        "body": "Bon do 200 tys. euro; dofinansowanie 80% wartości usługi badawczej, wkład własny 20%. Przed wnioskiem obowiązkowe bezpłatne doradztwo (15 h). Orientacyjnie: doradztwo i wybór jednostki 1–2 miesiące, badania 6–9 miesięcy."
+        "body": "Innowacje dla STEP: bon do 200 tys. euro, 80% wartości usługi badawczej, wkład własny 20%. Przed złożeniem wniosku obowiązkowe bezpłatne doradztwo (15 h konsultacji); nabór ciągły od 19 października 2026.\n\n[Uzupełnij: wartość usługi z oferty jednostki naukowej i harmonogram badań.]"
       }
     ],
     "documents": [
       {
         "name": "Potwierdzenie udziału w programie doradczym (15 h konsultacji)",
-        "note": "Zapisz się od razu — liczba miejsc jest ograniczona, a bez doradztwa nie ma wniosku."
+        "note": "Warunek konieczny wniosku; liczba miejsc jest ograniczona — zapisz się jak najwcześniej."
       },
       {
-        "name": "Opis usługi badawczej i jej wykonawcy",
-        "note": "Zakres z tego szkicu plus oferta i kompetencje wybranej jednostki naukowej."
+        "name": "Opis planowanej usługi badawczej i jej wykonawcy (jednostka naukowa)",
+        "note": "Zakres z tego szkicu oraz oferta wybranej jednostki."
       },
       {
         "name": "Oświadczenie o statusie MŚP",
-        "note": "Mała firma — status MŚP spełniony."
+        "note": "Firma deklaruje status małego przedsiębiorstwa."
       },
       {
-        "name": "Dokumenty rejestrowe z siedzibą na Dolnym Śląsku",
-        "note": "Wyciąg z KRS potwierdzający siedzibę we Wrocławiu."
+        "name": "Dokumenty rejestrowe potwierdzające siedzibę lub oddział na Dolnym Śląsku",
+        "note": "Firma działa w województwie dolnośląskim."
       }
     ],
     "openQuestions": [
-      "Ujemny wynik netto nie blokuje bonu, ale sprawdź w regulaminie wymogi dotyczące sytuacji finansowej i wkładu własnego.",
-      "Firma nie wie, ile wykorzystała pomocy de minimis — sprawdź w SUDOP, czy bon nie jest pomocą de minimis lub publiczną z limitem.",
-      "Ścieżka SMART MŚP (PARP) też pasuje — rozważ ją jako następny krok, gdy wyniki badań uzasadnią wdrożenie."
+      "Wynik netto za ostatni rok jest ujemny — sprawdź w regulaminie programu, czy sytuacja finansowa lub wkład własny podlegają ocenie.",
+      "Firma nie wie, ile pomocy de minimis wykorzystała — sprawdź w regulaminie, w jakiej formie pomocy udzielany jest bon.",
+      "Ścieżka SMART MŚP (PARP) też pasuje do profilu — to większy, sformalizowany wniosek, realny przy konkretnym pomyśle na produkt."
     ]
   }
 }

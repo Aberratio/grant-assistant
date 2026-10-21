@@ -47,11 +47,21 @@ describe('recorded runs', () => {
     expect(findRecording(company)).toBeNull();
   });
 
-  it('every recording names the model and how it was produced', () => {
+  it('every recording states how it was produced, and only API runs name a model', () => {
     for (const r of RECORDINGS) {
-      expect(r.model).toMatch(/^claude-/);
-      expect(['prepared', 'api']).toContain(r.source);
       expect(r.recordedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      if (r.source === 'api') expect(r.model).toMatch(/^claude-/);
+      else expect([r.source, r.model]).toEqual(['prepared', null]);
+    }
+  });
+
+  // Prepared recordings stand in for live output, so they follow the live prompt's
+  // contract (server/prompt.ts): numbers, dates and facts not given in the input are
+  // left as [placeholders] instead of being invented.
+  it('prepared recordings leave unknown facts as [placeholders], like the live prompt asks', () => {
+    for (const r of RECORDINGS.filter((x) => x.source === 'prepared')) {
+      const body = r.draft.sections.map((s) => s.body).join('\n');
+      expect(body, r.fixtureId).toMatch(/\[[^\]]{3,}\]/);
     }
   });
 });

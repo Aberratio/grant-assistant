@@ -18,20 +18,25 @@ export interface Draft {
 }
 
 /** Where the draft on screen came from. */
+/**
+ * How a recording was produced. 'api' = captured by `npm run record` (model is
+ * the id the API reported); 'prepared' = written offline without an API call,
+ * so no model produced it.
+ */
+export type RecordingProvenance =
+  | { source: 'api'; model: string; recordedAt: string }
+  | { source: 'prepared'; model: null; recordedAt: string };
+
 export type DraftOrigin =
-  | { kind: 'recording'; model: string; source: 'prepared' | 'api'; recordedAt: string }
+  | ({ kind: 'recording' } & RecordingProvenance)
   | { kind: 'template' }
   | { kind: 'live'; model: string };
 
-export interface Recording {
+export type Recording = RecordingProvenance & {
   version: 1;
   fixtureId: string;
   /** hashAssessmentInput(company, best) at recording time — detects stale recordings. */
   inputHash: string;
   bestCallId: string;
-  model: string;
-  /** 'prepared' = written offline without an API call; 'api' = captured by `npm run record`. */
-  source: 'prepared' | 'api';
-  recordedAt: string;
   draft: Draft;
-}
+};
