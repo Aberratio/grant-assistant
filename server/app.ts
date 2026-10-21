@@ -87,10 +87,14 @@ export function createApiServer(options: ApiOptions): Server {
       await handleDraft(req, res, options);
     };
     run().catch((error: unknown) => {
+      if (!(error instanceof HttpError)) {
+        options.log?.(`request failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
       const status = error instanceof HttpError ? error.status : 500;
       const message = error instanceof HttpError ? error.message : 'Błąd serwera.';
       if (!res.headersSent) send(res, status, { error: message });
-      if (status === 413) req.destroy();
+      // Drop the rest of an oversized upload only after the 413 has been flushed.
+      if (status === 413) res.once('finish', () => req.destroy());
     });
   });
 }

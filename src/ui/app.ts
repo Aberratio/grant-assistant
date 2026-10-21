@@ -1,12 +1,13 @@
-import { CALLS, DATA_STATE_AS_OF, getCall } from '../data/calls';
+import { CALLS, DATA_STATE_AS_OF, getCall, type FundingCall } from '../data/calls';
 import type { Draft, DraftOrigin } from '../domain/draft';
-import { buildTimeline } from '../domain/playback';
+import { buildTimeline, type TimelineTarget } from '../domain/playback';
 import { assess, type Assessment } from '../domain/rules';
 import { templateDraft } from '../domain/template-draft';
 import {
   COMPANY_SIZES,
   DE_MINIMIS,
   INDUSTRIES,
+  LIMITS,
   NEEDS,
   VOIVODESHIPS,
   type CallMatch,
@@ -18,7 +19,7 @@ import { findRecording } from '../recordings';
 import { h, paragraphs } from './dom';
 import { companyToEntries, parseCompany, type FormEntries } from './form-parse';
 import {
-  CONDITION_ICON,
+  CONDITION_MARK,
   DE_MINIMIS_LABEL,
   INDUSTRY_LABEL,
   MATCH_LABEL,
@@ -87,7 +88,7 @@ function buildForm(): HTMLFormElement {
     input('name', 'Nazwa firmy', {
       type: 'text',
       required: true,
-      maxlength: '120',
+      maxlength: String(LIMITS.nameMaxLength),
       autocomplete: 'off',
     }),
     h(
@@ -103,7 +104,7 @@ function buildForm(): HTMLFormElement {
       input('closedFiscalYears', 'Zamknięte lata obrotowe', {
         type: 'number',
         min: '0',
-        max: '200',
+        max: String(LIMITS.maxClosedFiscalYears),
         step: '1',
         inputmode: 'numeric',
         required: true,
@@ -129,9 +130,11 @@ function buildForm(): HTMLFormElement {
         id: descriptionId,
         name: 'description',
         rows: '5',
-        maxlength: '2000',
+        maxlength: String(LIMITS.descriptionMaxLength),
         placeholder: 'Co dziś nie działa i co chcecie zmienić?',
+        'aria-describedby': `${descriptionId}-error`,
       }),
+      h('p', { class: 'field-error', id: `${descriptionId}-error`, 'aria-live': 'polite' }),
     ),
     h('button', { type: 'submit', class: 'btn-primary' }, 'Sprawdź dopasowanie'),
   );
@@ -182,6 +185,15 @@ function showErrors(form: HTMLFormElement, errors: Partial<Record<string, string
   first?.focus();
 }
 
+const draftHeading = () => h('h2', {}, 'Szkic wniosku');
+
+function sourceLinks(call: FundingCall): (HTMLElement | string)[] {
+  return call.sources.flatMap((s, i) => [
+    i > 0 ? ' · ' : '',
+    h('a', { href: s.url, target: '_blank', rel: 'noopener noreferrer' }, s.label),
+  ]);
+}
+
 function conditionList(conditions: readonly ConditionResult[]): HTMLElement {
   return h(
     'ul',
@@ -193,13 +205,13 @@ function conditionList(conditions: readonly ConditionResult[]): HTMLElement {
         h(
           'span',
           { class: 'condition-icon', 'aria-hidden': 'true' },
-          CONDITION_ICON[c.status].symbol,
+          CONDITION_MARK[c.status].symbol,
         ),
         h(
           'div',
           {},
           h('span', { class: 'condition-label' }, c.label),
-          h('span', { class: 'visually-hidden' }, ` — ${CONDITION_ICON[c.status].label}. `),
+          h('span', { class: 'visually-hidden' }, ` — ${CONDITION_MARK[c.status].label}. `),
           h('span', { class: 'condition-detail' }, c.detail),
         ),
       ),
@@ -224,15 +236,7 @@ function matchCard(match: CallMatch, isBest: boolean): HTMLElement {
       {},
       call.notes.map((n) => h('li', {}, n)),
     ),
-    h(
-      'p',
-      { class: 'sources' },
-      'Źródła: ',
-      call.sources.flatMap((s, i) => [
-        i > 0 ? ' · ' : '',
-        h('a', { href: s.url, target: '_blank', rel: 'noopener noreferrer' }, s.label),
-      ]),
-    ),
+    h('p', { class: 'sources' }, 'Źródła: ', sourceLinks(call)),
   ];
   const stateAsOf = `stan na ${formatDate(call.stateAsOf)}`;
 
@@ -290,10 +294,8 @@ function originLabel(origin: DraftOrigin): string {
 }
 
 function draftView(draft: Draft, origin: DraftOrigin, callName: string): HTMLElement {
-  const parts = new Map<string, HTMLElement>();
-  const part = (key: string, el: HTMLElement) => {
+  const part = (key: TimelineTarget, el: HTMLElement) => {
     el.dataset['part'] = key;
-    parts.set(key, el);
     return el;
   };
 
@@ -419,7 +421,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
 
   const showDraft = (draft: Draft, origin: DraftOrigin, callName: string) => {
     const view = draftView(draft, origin, callName);
-    draftPanel.replaceChildren(h('h2', {}, 'Szkic wniosku'), view);
+    draftPanel.replaceChildren(draftHeading(), view);
     play(view, draft);
   };
 
@@ -427,6 +429,8 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
     const id = ++runId;
     abort?.abort();
     timers.splice(0).forEach((t) => clearTimeout(t));
+    // A superseded live request skips its own reset (id !== runId), so reset here.
+    draftPanel.setAttribute('aria-busy', 'false');
 
     const assessment = assess(company);
     resultsList.replaceChildren(
@@ -434,7 +438,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
     );
 
     if (!assessment.best) {
-      draftPanel.replaceChildren(h('h2', {}, 'Szkic wniosku'), noMatchView(assessment));
+      draftPanel.replaceChildren(draftHeading(), noMatchView(assessment));
       return;
     }
     const callName = getCall(assessment.best.callId).name;
@@ -442,16 +446,21 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
     if (options.mode === 'recorded') {
       const recording = findRecording(company);
       if (recording) {
-        showDraft(
-          recording.draft,
-          {
-            kind: 'recording',
-            model: recording.model,
-            source: recording.source,
-            recordedAt: recording.recordedAt,
-          },
-          callName,
-        );
+        const origin: DraftOrigin =
+          recording.source === 'api'
+            ? {
+                kind: 'recording',
+                source: 'api',
+                model: recording.model,
+                recordedAt: recording.recordedAt,
+              }
+            : {
+                kind: 'recording',
+                source: 'prepared',
+                model: null,
+                recordedAt: recording.recordedAt,
+              };
+        showDraft(recording.draft, origin, callName);
       } else {
         const draft = templateDraft(company, assessment);
         if (draft) showDraft(draft, { kind: 'template' }, callName);
@@ -462,7 +471,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
     abort = new AbortController();
     draftPanel.setAttribute('aria-busy', 'true');
     draftPanel.replaceChildren(
-      h('h2', {}, 'Szkic wniosku'),
+      draftHeading(),
       h(
         'p',
         { class: 'loading' },
@@ -477,7 +486,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
     } catch (error) {
       if (id !== runId || (error instanceof DOMException && error.name === 'AbortError')) return;
       draftPanel.replaceChildren(
-        h('h2', {}, 'Szkic wniosku'),
+        draftHeading(),
         h(
           'p',
           { class: 'error', role: 'alert' },
@@ -587,17 +596,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
         h(
           'ul',
           {},
-          CALLS.map((c) =>
-            h(
-              'li',
-              {},
-              `${c.name}: `,
-              c.sources.flatMap((s, i) => [
-                i > 0 ? ' · ' : '',
-                h('a', { href: s.url, target: '_blank', rel: 'noopener noreferrer' }, s.label),
-              ]),
-            ),
-          ),
+          CALLS.map((c) => h('li', {}, `${c.name}: `, sourceLinks(c))),
         ),
         h('p', {}, 'Wszystkie przykładowe firmy są fikcyjne. ' + DISCLAIMER),
       ),
