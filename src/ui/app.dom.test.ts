@@ -40,9 +40,9 @@ describe('recorded mode', () => {
   beforeEach(() => mountApp(root, { mode: 'recorded', embed: false }));
 
   it('shows the disclaimer with the data date and a mode badge', () => {
-    expect(text('.disclaimer')).toMatch(/nie porada prawna ani gwarancja dotacji/);
+    expect(text('.disclaimer')).toMatch(/nie stanowi porady prawnej ani gwarancji dotacji/);
     expect(text('.disclaimer')).toContain('21.10.2026');
-    expect(text('.mode')).toContain('tryb nagrany');
+    expect(text('.mode')).toBe('Zapisany przebieg');
   });
 
   it('lists every funding call with source links in the footer', () => {
@@ -51,10 +51,16 @@ describe('recorded mode', () => {
     expect(links.length).toBeGreaterThanOrEqual(4);
   });
 
+  it('marks the sample data and credits kokot.it in the footer', () => {
+    expect(text('.site-footer .sample-data')).toBe('Dane przykładowe · fikcyjne firmy');
+    expect(text('.site-footer .byline')).toBe('© 2026 kokot.it');
+    expect($('.site-footer .byline a')!.getAttribute('href')).toBe('https://kokot.it');
+  });
+
   it('replays the first sample company on load: Dig.IT first, recorded draft and documents', () => {
     const recording = RECORDINGS.find((r) => r.fixtureId === 'kowadlo-precyzja')!;
     expect(text('.match--best h3')).toContain('Dig.IT');
-    expect(text('.origin')).toContain('Nagranie');
+    expect(text('.origin')).toContain('Zapisany przebieg');
     expect(text('.draft-title')).toBe(recording.draft.title);
     expect($$('.documents li')).toHaveLength(recording.draft.documents.length);
   });
@@ -105,7 +111,7 @@ describe('embed mode', () => {
   it('marks the document for minimal chrome and keeps the disclaimer', () => {
     mountApp(root, { mode: 'recorded', embed: true });
     expect(document.documentElement.dataset['embed']).toBe('1');
-    expect(text('.disclaimer')).toMatch(/nie porada prawna/);
+    expect(text('.disclaimer')).toMatch(/porady prawnej/);
     expect($$('.site-footer a').length).toBeGreaterThanOrEqual(4);
   });
 
@@ -152,7 +158,9 @@ describe('live mode', () => {
       company: { name: string };
     };
     expect(body.company.name).toContain('Kowadło');
-    await vi.waitFor(() => expect(text('.origin')).toContain('Na żywo — claude-opus-5-5'));
+    await vi.waitFor(() =>
+      expect(text('.origin')).toContain('Na żywo (Claude API) · claude-opus-5-5'),
+    );
     expect(text('.draft-title')).toBe(recording.draft.title);
     expect($('.draft-panel')!.getAttribute('aria-busy')).toBe('false');
   });
@@ -162,7 +170,7 @@ describe('live mode', () => {
     mountApp(root, { mode: 'live', embed: false });
     submit();
     await vi.waitFor(() =>
-      expect(text('[role="alert"]')).toContain('Brak połączenia z lokalnym serwerem API'),
+      expect(text('[role="alert"]')).toContain('Brak połączenia z serwerem API'),
     );
   });
 

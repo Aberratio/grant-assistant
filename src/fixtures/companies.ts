@@ -1,5 +1,5 @@
 /**
- * Sample companies for the recorded demo. ALL OF THEM ARE FICTIONAL — names,
+ * Sample companies for the recorded runs. ALL OF THEM ARE FICTIONAL — names,
  * numbers and plans are invented; any resemblance to a real company is accidental.
  */
 import type { CompanyProfile } from '../domain/types';

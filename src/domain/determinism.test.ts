@@ -108,7 +108,7 @@ describe('buildTimeline', () => {
     for (let i = 1; i < a.length; i++) expect(a[i]!.atMs).toBeGreaterThan(a[i - 1]!.atMs);
   });
 
-  it('caps the whole playback so the demo never feels slow', () => {
+  it('caps the whole playback so a replay never feels slow', () => {
     const long = { ...draft, sections: Array(30).fill({ heading: 'H', body: 'z'.repeat(5000) }) };
     const steps = buildTimeline(long);
     expect(steps.at(-1)!.atMs).toBeLessThanOrEqual(4000);
