@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Grant application assistant: deterministic eligibility rules for Polish EU funding calls plus a Claude-drafted project description (recorded or live).",
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=22"
@@ -18,7 +19,8 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "record": "tsx scripts/record.ts",
-    "screenshots": "tsx scripts/screenshots.ts"
+    "screenshots": "tsx scripts/screenshots.ts",
+    "check:wording": "tsx scripts/check-wording.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.137.0",
