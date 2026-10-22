@@ -3,10 +3,28 @@
 ## Principle
 
 Eligibility is decided by code, not by the model. Each funding call has a plain TypeScript
-rule function that returns every condition as `met`, `unmet` or `uncertain` with a Polish
-explanation. Claude receives the finished rule result, the matched call's data and the
+rule function that returns every condition as `met`, `unmet` or `uncertain` with an
+explanation in the interface language. Claude receives the finished rule result, the matched call's data and the
 company description, and writes the project description and document checklist. It is
 never asked to re-judge eligibility.
+
+## Languages
+
+- The repository is written in English. Polish appears only in the Polish dictionary
+  (`src/i18n/pl.ts`) and in data: funding calls (`src/data/`), sample companies
+  (`src/fixtures/`) and recorded drafts (`src/recordings/`). `npm run check:language` enforces
+  this in CI; official programme names are the only Polish words allowed in prose.
+- Every visitor-facing text exists in English and Polish. `src/i18n/messages.ts` defines the
+  dictionary shape, so a missing key is a type error; a test also compares the key sets.
+- Language: `?lang=en|pl` first (for embeds), then the first supported browser language,
+  then English. The EN / PL switch re-renders the app, keeps other URL parameters and replays
+  the same sample company; in live mode it re-runs the rules but waits for a submit before
+  calling the API again.
+- Rules decide the same statuses in both languages; `lang` only selects the wording. The
+  language is part of the run hash, so each language has its own recording.
+- The live server receives `lang`, writes the rule result in that language and asks Claude
+  for the draft in it through the user message; the system prompt stays fixed. Server
+  errors carry a stable `code` that the browser translates.
 
 ## Rules and ranking
 
@@ -14,9 +32,9 @@ never asked to re-judge eligibility.
   (for example an unknown net result), otherwise `eligible`.
 - Ranking: status (eligible → conditional → ineligible), then fewer open questions, then a
   fixed call order — smaller, simpler instruments first (Dig.IT, STEP, 7.4A, SMART). A
-  Lower Silesian R&D project therefore gets the STEP voucher before Ścieżka SMART.
+  Lower Silesian R&D project therefore gets the STEP voucher before Ścieżka SMART MŚP.
 - Dig.IT's "positive net result" is encoded as a hard rule. It comes from the call's
-  regulations rather than the public call page, so the call notes say to confirm it.
+  regulations rather than the call announcement, so the call notes say to confirm it.
 - For an R&D or training need, Dig.IT's scope is `uncertain`, not `unmet`: the call funds
   custom digital technology and allows training as an additional cost (≤ 40%), so the rule
   cannot rule it out.
@@ -27,7 +45,7 @@ never asked to re-judge eligibility.
 ## Two run modes
 
 - **Recorded run** (default, every static build). The four sample companies replay stored
-  runs from `src/recordings/*.json`. Each recording stores a hash of its input, the rule
+  runs from `src/recordings/<lang>/*.json`. Each recording stores a hash of its language, input, the rule
   result and the matched call's data (`src/domain/hash.ts`: canonical JSON + FNV-1a). The
   test suite fails if a rule, call or fixture change makes a recording stale, so an outdated
   draft is never replayed silently. Replay timing is a deterministic timeline
@@ -69,4 +87,4 @@ embedded app makes no third-party requests.
 - Playwright is a dev dependency used only by `scripts/screenshots.ts`; browsers are not
   downloaded by `npm ci`, so CI does not need them.
 - `npm run check:wording` scans the static build and the documentation for wording that must
-  not ship; it runs in CI after the build.
+  not ship, including its Polish inflections; it runs in CI after the build.
