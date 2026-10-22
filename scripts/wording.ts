@@ -6,8 +6,12 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, relative, sep } from 'node:path';
 
-/** Forbidden word; unrelated words that merely contain it are allowed. */
-export const FORBIDDEN = /demo(?!graph|crat|cracy)/gi;
+/**
+ * Forbidden word in English and every Polish inflection of it (demo, dema, demu,
+ * demem, demie, dem, demach, demom, demami). Unrelated words that merely contain
+ * the letters (demographic, democracy, demand, academic, pandemia) are allowed.
+ */
+export const FORBIDDEN = /demo(?!graph|crat|cracy)|\bdem(?:a|u|em|ie|ach|om|ami)?\b/gi;
 
 export const TEXT_EXTENSIONS = new Set(['.html', '.js', '.css', '.json', '.svg', '.md', '.txt']);
 
