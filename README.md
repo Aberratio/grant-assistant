@@ -1,129 +1,134 @@
 # Grant application assistant
 
-> **Disclaimer.** This is a portfolio demo, **not legal advice and no guarantee of funding**.
-> The eligibility rules are simplified and the funding-call data is **as of 21 Oct 2026**
-> (each call links to its source). Always check the official rules (_regulamin_) before applying.
-> All sample companies are fictional.
+[![CI](https://github.com/Aberratio/grant-assistant/actions/workflows/ci.yml/badge.svg)](https://github.com/Aberratio/grant-assistant/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**PL:** Demo asystenta wniosku dotacyjnego dla polskich MŚP. Deterministyczne reguły
-sprawdzają, do których naborów UE firma pasuje (Dig.IT 2/2026, Innowacje dla STEP, Ścieżka
-SMART MŚP, Usługi rozwojowe 7.4A FEDS) i których warunków nie spełnia — np. „brakuje 2 lat
-obrotowych”. Model Claude dostaje wynik reguł i pisze szkic opisu projektu oraz listę
-dokumentów. To nie jest porada prawna ani gwarancja dotacji; dane naborów ze stanu na
-21.10.2026, z linkami do źródeł.
+Eligibility checks for Polish EU funding calls, with a Claude-drafted project description.
+Built for small manufacturers and the advisers who help them: deterministic rules decide
+which calls a company qualifies for and exactly which conditions it misses; Claude then
+drafts the project description and the document checklist for the best match.
 
-## Funding-call data (as of 2026-10-21)
+![Grant application assistant — recorded run, Dig.IT match](docs/screenshots/01-overview.png)
 
-| Call                                          | Operator          | Source                                                                                                                                                                                                                                                          |
-| --------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Dig.IT Transformacja cyfrowa — konkurs 2/2026 | ARP               | [digit.arp.pl](https://digit.arp.pl/eventy/nabory/digit-konkurs-22026/), [nowoczesnagospodarka.gov.pl](https://nowoczesnagospodarka.gov.pl/aktualnosci-1-40-mln-na-cyfryzacje-polskich-firm-2-listopada-rusza-drugi-nabor-w-projekcie-dig-it-transformacja-cy/) |
-| Innowacje dla STEP — bony B+R                 | ARAW, FEDS        | [wroclaw.pl](https://www.wroclaw.pl/przedsiebiorczy-wroclaw/innowacje-dla-step-granty-dla-firm-dolny-slask)                                                                                                                                                     |
-| Usługi rozwojowe 7.4A FEDS (BUR)              | DAWG and partners | [dawg.pl](https://dawg.pl/projekty/dotacje-na-uslugi-rozwojowe-dla-dolnoslskich-firm/)                                                                                                                                                                          |
-| Ścieżka SMART MŚP — FENG.01.01-IP.02-003/26   | PARP              | [parp.gov.pl (PDF)](https://www.parp.gov.pl/storage/grants/documents/743/ogloszenie_naboru.pdf)                                                                                                                                                                 |
+> **Not legal advice.** Results are informational and do not guarantee funding. The rules
+> simplify each call, and funding-call data reflects the state as of **21 October 2026**.
+> Verify the official regulations (_regulamin_) at the linked sources before applying.
 
-The same links are shown in the app, per call and in the footer. Facts were checked on these
-pages on 2026-10-21 and may have changed since.
+## Key features
 
-## Problem
+- **Explainable eligibility.** Every condition comes back as met / unmet / uncertain with a
+  reason, e.g. “brakuje 2 lat obrotowych” (two closed fiscal years short).
+- **LLM kept out of the decision.** Rules are plain, unit-tested TypeScript; the model only
+  writes the draft and is never asked to re-judge eligibility.
+- **Structured drafts.** Claude returns a schema-validated draft: title, summary, sections,
+  documents to prepare and open questions, with unknowns left as `[…]` placeholders.
+- **Two run modes.** A recorded, deterministic run with no API cost (default for every
+  static build) and a live mode that calls the Claude API from a local server.
+- **Source-linked call data.** Each call shows its window, funding terms, notes and links to
+  the official pages.
+- **Embeddable.** `?embed=1` renders minimal chrome for an iframe and reports its height to
+  the parent page.
+- **Accessible and self-contained.** WCAG AA contrast enforced by tests, keyboard-friendly
+  form, self-hosted fonts, no third-party requests.
 
-Small manufacturers hear about EU grants (e.g. ARP's Dig.IT 2/2026, call 2–30 Nov 2026) but
-cannot tell quickly whether they qualify — the hard conditions (SME status, manufacturing
-sector, at least 5 closed fiscal years, positive result, de minimis headroom) are spread over
-long documents. Then they face a blank project description and a document checklist.
+Funding calls covered: Dig.IT Transformacja cyfrowa 2/2026 (ARP), Innowacje dla STEP (ARAW),
+Usługi rozwojowe 7.4A FEDS (DAWG, BUR) and Ścieżka SMART MŚP (PARP).
 
-This assistant does both steps, and keeps the part that must be right out of the LLM:
+| Unmet condition                                             | Conditional match with open questions                           |
+| ----------------------------------------------------------- | --------------------------------------------------------------- |
+| ![Unmet condition](docs/screenshots/02-unmet-condition.png) | ![Conditional match](docs/screenshots/03-conditional-match.png) |
+| **Draft and documents**                                     | **Mobile**                                                      |
+| ![Draft and documents](docs/screenshots/04-draft.png)       | ![Mobile](docs/screenshots/06-mobile.png)                       |
 
-1. **Rules decide eligibility** — plain TypeScript, unit-tested, explainable. Every condition
-   comes back as met / unmet / uncertain with a reason.
-2. **Claude writes the draft** for the best match — given the rule result, the call data and
-   the company description, and never asked to re-judge eligibility.
+## Architecture
 
-## Demo
+```mermaid
+flowchart LR
+  F[Company form] --> R[Eligibility rules<br/>src/domain/rules.ts]
+  C[(Funding-call data<br/>src/data/calls.ts)] --> R
+  R --> M[Ranked matches<br/>met / unmet / uncertain]
+  M -->|Recorded run| P[Stored run<br/>src/recordings, hash-checked]
+  M -->|Live| S[Local API server<br/>127.0.0.1, holds the key]
+  S -->|recomputes rules| L[Claude API<br/>structured output]
+  P --> D[Draft + documents + open questions]
+  L --> D
+```
 
-| Recorded run — Dig.IT match                             | Unmet condition ("brakuje 2" years)                           |
-| ------------------------------------------------------- | ------------------------------------------------------------- |
-| ![Recorded run](docs/screenshots/01-recorded-digit.png) | ![Unmet conditions](docs/screenshots/03-unmet-five-years.png) |
+```
+src/
+  data/calls.ts            funding calls: facts, documents, sources, "as of" date
+  domain/rules.ts          deterministic eligibility rules + ranking (no LLM)
+  domain/hash.ts           canonical JSON + FNV-1a: identity of a run
+  domain/playback.ts       deterministic reveal timeline for recorded drafts
+  domain/template-draft.ts labelled template draft for edited input in recorded mode
+  fixtures/companies.ts    four fictional sample companies
+  recordings/*.json        recorded runs, replayed by input hash
+  ui/                      vanilla TypeScript + DOM; text set via text nodes only
+server/
+  app.ts                   127.0.0.1 HTTP API: validate → rules → generate
+  llm.ts                   the only module that calls Claude
+  prompt.ts                fixed system prompt + per-request JSON payload
+scripts/                   dev-live, record, screenshots, wording guard
+```
 
-| Conditional match with open questions                                    | Draft and documents                     |
-| ------------------------------------------------------------------------ | --------------------------------------- |
-| ![Conditional match](docs/screenshots/04-conditional-open-questions.png) | ![Draft](docs/screenshots/07-draft.png) |
+Design decisions — ranking, rule edge cases, recordings and the security boundary — are in
+[docs/architecture.md](docs/architecture.md).
 
-| Embedded (`?embed=1`)                        | Mobile                                    |
-| -------------------------------------------- | ----------------------------------------- |
-| ![Embed mode](docs/screenshots/05-embed.png) | ![Mobile](docs/screenshots/06-mobile.png) |
-
-Screenshots are generated by `npm run screenshots` (headless Chromium against the static
-build; run `npm run build` first).
-
-## Running it
+## Quick start
 
 Requires Node 22+ (developed on Node 24).
 
 ```bash
 npm ci
+npm run dev        # recorded run, no API key: http://localhost:5173
 ```
 
-### Recorded mode (default — no API key, no server)
+Without an API key the four sample companies replay recorded, deterministic runs. If you
+edit the form, the rules still run in the browser and the draft becomes a clearly labelled
+template.
 
-```bash
-npm run dev        # http://localhost:5173
-npm run build      # static site in dist/, works from any sub-path (base: './')
-npm run preview
-```
-
-The four sample companies replay **recorded, deterministic runs**. If you edit the form, the
-rules still run live in the browser; the draft becomes a clearly labelled template, because
-an AI-written draft for new input needs the live mode.
-
-### Live mode (real Claude API, local only)
+**Live mode (Claude API):**
 
 ```bash
 cp .env.example .env   # then set ANTHROPIC_API_KEY
 npm run dev:live       # API on 127.0.0.1:8787, app on http://127.0.0.1:5173
 ```
 
-`dev:live` starts a small Node server bound to `127.0.0.1` that reads `ANTHROPIC_API_KEY`
-from `.env` and calls Claude through the official
-[`@anthropic-ai/sdk`](https://www.npmjs.com/package/@anthropic-ai/sdk). Vite proxies `/api`
-to it. **The key never reaches the browser**: it is not `VITE_`-prefixed, the client bundle
-contains no SDK, and the server recomputes the rules itself instead of trusting the browser.
+`dev:live` starts a small Node server bound to `127.0.0.1`; Vite proxies `/api` to it. The
+server calls `claude-opus-5-5` through the official
+[`@anthropic-ai/sdk`](https://www.npmjs.com/package/@anthropic-ai/sdk) with structured
+output validated against a Zod schema; a refusal or a truncated answer becomes a clear
+error instead of a half-parsed draft.
 
-- Model: `claude-opus-5-5`, effort `medium`, structured output validated against a Zod
-  schema (`client.beta.messages.parse` + `betaZodOutputFormat`).
-- Server-side refusal fallback is on (`fallbacks: "default"`, beta
-  `server-side-fallback-2026-07-01`); a remaining refusal or a truncated answer becomes a
-  clear error instead of a half-parsed draft.
+**Static build:**
 
-### Recording new runs
+```bash
+npm run build      # static site in dist/, works from any sub-path
+npm run preview
+```
+
+**Recording new runs:**
 
 ```bash
 npm run record                       # all sample companies
 npm run record -- kowadlo-precyzja   # one company
 ```
 
-`record` runs the live pipeline for the fixtures in `src/fixtures/companies.ts` and overwrites
-`src/recordings/<id>.json` with `source: "api"`, the model id and the date. Review the diff
-and commit. Each recording stores a hash of its input, **the rule result and the matched call's
-data**; the test suite fails if a rule, call or fixture change makes a recording stale, so an outdated draft
-can never be replayed silently.
+`record` runs the live pipeline for the fixtures and overwrites `src/recordings/<id>.json`.
+Each recording stores a hash of its input, the rule result and the matched call's data; the
+test suite fails if a rule, call or fixture change makes a recording stale.
 
-> The recordings committed today are marked `source: "prepared"` with `model: null`: they
-> were written offline (no API key was available when the demo was built) in the exact shape
-> the live mode returns and under the same rules as the live prompt — only facts from the
-> input and the call data, unknowns left as `[…]` placeholders. The UI labels them as
-> prepared. Run `npm run record` with a key to replace them with captured runs.
-
-### Embedding (kokot.it case study)
+**Embedding:**
 
 ```html
 <iframe
   src="https://<host>/grant-assistant/?embed=1"
-  title="Asystent wniosku dotacyjnego — demo"
+  title="Asystent wniosku dotacyjnego"
   style="width: 100%; border: 0; min-height: 900px"
   loading="lazy"
 ></iframe>
 <script>
-  // Optional auto-height: the demo posts its height on every resize.
+  // Optional auto-height: the app posts its height on every resize.
   addEventListener('message', (e) => {
     if (e.origin !== 'https://<host>') return;
     if (e.data?.type === 'grant-assistant:height') {
@@ -133,83 +138,85 @@ can never be replayed silently.
 </script>
 ```
 
-`?embed=1` hides the page header; the disclaimer, the mode badge and the footer with the
+`?embed=1` hides the page header; the disclaimer, the mode label and the footer with the
 source links stay visible.
 
-### Quality gates
+## Configuration
+
+| Variable                   | Required          | Default | Description                                                      |
+| -------------------------- | ----------------- | ------- | ---------------------------------------------------------------- |
+| `ANTHROPIC_API_KEY`        | Live mode, record | —       | Claude API key. Read only by the local server, never the client. |
+| `GRANT_ASSISTANT_API_PORT` | No                | `8787`  | Port of the local API server used by `dev:live`.                 |
+
+Static builds need no configuration and always use recorded runs.
+
+## Tests and quality
 
 ```bash
-npm run lint        # ESLint (typescript-eslint strict) + Prettier check
-npm run typecheck   # tsc strict, browser and Node configs
-npm test            # Vitest
+npm run lint            # ESLint (typescript-eslint strict) + Prettier check
+npm run typecheck       # strict tsc, browser and Node configs
+npm test                # Vitest: 187 tests
 npm run build
+npm run check:wording   # scans dist/ and the docs for wording that must not ship
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same steps with SHA-pinned actions.
+The suite covers rule boundaries (4 vs 5 fiscal years; result −1 / 0 / 1 / unknown; every
+sector and size; de minimis answers), ranking, hashing (FNV reference vectors), recording
+freshness and deterministic replay, prompt contents, WCAG AA contrast of every token pair,
+the HTTP API (validation, size limit, hidden error details, no model call without a match),
+the Claude wrapper against a fake client, and the full UI flow in a DOM (jsdom). There are
+no browser end-to-end tests; screenshots are produced with Playwright by
+`npm run screenshots`.
 
-## Architecture
+[CI](.github/workflows/ci.yml) runs the same steps on every push and pull request, with
+SHA-pinned actions.
 
-```
-src/
-  data/calls.ts            funding calls: facts, documents, sources, "as of" date
-  domain/rules.ts          deterministic eligibility rules + ranking (no LLM)
-  domain/hash.ts           canonical JSON + FNV-1a: identity of a run
-  domain/playback.ts       deterministic reveal timeline for recorded drafts
-  domain/template-draft.ts fallback draft for edited input in recorded mode
-  domain/draft-schema.ts   Zod schema of a draft (server and tests only)
-  fixtures/companies.ts    four fictional sample companies
-  recordings/*.json        recorded runs, replayed by input hash
-  ui/                      vanilla TS + DOM, no framework; text set via text nodes only
-  styles/tokens.css        kokot.it brand tokens (verbatim copy) + a small app-only block
-  styles/fonts.css         self-hosted Schibsted Grotesk + JetBrains Mono (OFL, src/assets/fonts)
-server/
-  app.ts                   127.0.0.1 HTTP API: validate → rules → generate
-  llm.ts                   the only module that calls Claude
-  prompt.ts                fixed system prompt + per-request JSON payload
-scripts/                   dev-live, record, screenshots
-```
+## Security
 
-**Rules.** Each call has a rule function that returns conditions with
-`met | unmet | uncertain` and a Polish explanation. A call is `ineligible` if any condition is
-unmet, `conditional` if any is uncertain (e.g. net result unknown), otherwise `eligible`.
+- The Claude API key lives only in the local server process. It is not `VITE_`-prefixed,
+  the client bundle contains no SDK, and ESLint forbids importing server code or the SDK
+  from browser code.
+- The server recomputes the rules itself instead of trusting the browser, validates input,
+  caps request size at 16 KiB and binds to `127.0.0.1`.
+- Model and user text is rendered as text, never as markup.
+- `.env` is git-ignored; `.env.example` documents the variables without values.
 
-| Call                                   | Conditions encoded                                                                                                                     |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Dig.IT 2/2026 (ARP)                    | SME; manufacturing or production services; ≥ 5 closed fiscal years; net result > 0; de minimis headroom; project is digital technology |
-| Innowacje dla STEP (ARAW)              | SME; Lower Silesia; need is an R&D service                                                                                             |
-| Usługi rozwojowe 7.4A FEDS (DAWG, BUR) | SME; Lower Silesia; need is training / development services                                                                            |
-| Ścieżka SMART MŚP (PARP)               | SME; project includes the mandatory R&D module                                                                                         |
+## Data
 
-**Ranking.** Status (eligible → conditional → ineligible), then fewer open questions, then a
-curated order (smaller, simpler instruments first). The best match is the first call that is
-not ineligible; no draft is generated when nothing matches.
+- **Sample companies are fictional.** Names, numbers and plans are invented; any
+  resemblance to a real company is accidental.
+- **Funding-call data is a snapshot as of 21 October 2026**, checked on the official pages
+  linked below and in the app. Windows and conditions change.
+- The committed recordings were prepared offline in the exact output shape of the live mode,
+  under the same rules as the live prompt, and are labelled as prepared in the app.
+  `npm run record` with an API key replaces them with captured runs.
 
-**Tests.** Rule boundaries (4 vs 5 years; result −1 / 0 / 1 / unknown; every sector and size;
-de minimis answers), ranking, hashing (FNV reference vectors), recording freshness and
-deterministic replay, prompt contents, WCAG AA contrast of every token pair (computed
-from `tokens.css`, so a brand swap that breaks contrast fails the suite), the HTTP API (validation, size limit, hidden error
-details, no model call without a match) and the Claude wrapper against a fake client.
+| Call                                          | Operator          | Source                                                                                                                                                                                                                                                          |
+| --------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dig.IT Transformacja cyfrowa — konkurs 2/2026 | ARP               | [digit.arp.pl](https://digit.arp.pl/eventy/nabory/digit-konkurs-22026/), [nowoczesnagospodarka.gov.pl](https://nowoczesnagospodarka.gov.pl/aktualnosci-1-40-mln-na-cyfryzacje-polskich-firm-2-listopada-rusza-drugi-nabor-w-projekcie-dig-it-transformacja-cy/) |
+| Innowacje dla STEP — bony B+R                 | ARAW, FEDS        | [wroclaw.pl](https://www.wroclaw.pl/przedsiebiorczy-wroclaw/innowacje-dla-step-granty-dla-firm-dolny-slask)                                                                                                                                                     |
+| Usługi rozwojowe 7.4A FEDS (BUR)              | DAWG and partners | [dawg.pl](https://dawg.pl/projekty/dotacje-na-uslugi-rozwojowe-dla-dolnoslskich-firm/)                                                                                                                                                                          |
+| Ścieżka SMART MŚP — FENG.01.01-IP.02-003/26   | PARP              | [parp.gov.pl (PDF)](https://www.parp.gov.pl/storage/grants/documents/743/ogloszenie_naboru.pdf)                                                                                                                                                                 |
 
-**Brand.** Colours, type, spacing and motion come from the kokot.it brand system: `src/styles/tokens.css`
-is a verbatim copy of `kokot-it/src/styles/tokens.css` followed by a short block of
-grant-assistant layout sizes, and `app.css` uses only those custom properties. To follow a
-brand update, replace the copied part and run `npm test` — the contrast test fails if a new
-colour breaks WCAG AA. Fonts are self-hosted (SIL Open Font License 1.1; licences in
-`src/assets/fonts/`), so the embedded demo makes no third-party requests.
-
-## Limitations
+### Known limitations
 
 - The rules simplify each call: e.g. Dig.IT's cap of 30% of average revenue, eligible cost
-  categories and scoring criteria are not computed; "positive result" comes from research
-  notes and should be confirmed in the _regulamin_.
-- Call data is a snapshot as of 2026-10-21; windows and conditions change.
-- Company size is self-declared; the full SME test (headcount, turnover, linked enterprises)
-  is not checked.
-- The committed recordings are prepared offline, not captured from the API (see above).
-- The UI is Polish only.
+  categories and scoring criteria are not computed; the positive-result condition comes from
+  the call regulations and should be confirmed there.
+- Company size is self-declared; the full SME test (headcount, turnover, linked
+  enterprises) is not checked.
+- The interface is in Polish.
 
 ## Disclaimer
 
 This tool does not provide legal, tax or funding advice and does not guarantee that a grant
-will be awarded. Funding-call information is as of 21 October 2026 and may be outdated —
-verify it at the linked official sources. Sample companies are fictional.
+will be awarded. Funding-call information reflects the state as of 21 October 2026; verify
+it at the linked official sources before applying.
+
+## License
+
+[MIT](LICENSE) © 2026 Joanna Kokot
+
+## Author
+
+Designed and built by [kokot.it](https://kokot.it).
