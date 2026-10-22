@@ -1,7 +1,8 @@
 {
   "version": 1,
   "fixtureId": "ceramika-wartka",
-  "inputHash": "8860539e",
+  "lang": "pl",
+  "inputHash": "b26ebbeb",
   "bestCallId": "digit-2-2026",
   "model": null,
   "source": "prepared",

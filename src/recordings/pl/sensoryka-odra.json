@@ -1,7 +1,8 @@
 {
   "version": 1,
   "fixtureId": "sensoryka-odra",
-  "inputHash": "319f0240",
+  "lang": "pl",
+  "inputHash": "f0c478e8",
   "bestCallId": "innowacje-dla-step",
   "model": null,
   "source": "prepared",

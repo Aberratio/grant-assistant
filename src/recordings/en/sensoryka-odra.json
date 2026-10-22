@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "fixtureId": "sensoryka-odra",
+  "lang": "en",
+  "inputHash": "599671f2",
+  "bestCallId": "innowacje-dla-step",
+  "model": null,
+  "source": "prepared",
+  "recordedAt": "2026-10-22",
+  "draft": {
+    "title": "Research on an AI model predicting CNC spindle failures from vibration signals — R&D service for Sensoryka Odra",
+    "summary": "Sensoryka Odra Sp. z o.o., a maker of vibration sensors for CNC machines, plans to commission a research organisation to study an AI model that predicts spindle failure several days in advance from the vibration signal. The R&D voucher from the Innowacje dla STEP programme covers 80% of the research service value.",
+    "sections": [
+      {
+        "heading": "Research problem",
+        "body": "The company builds vibration sensors for CNC machines. It wants to develop an AI model that predicts spindle failure several days in advance from the vibration signal. This requires research on the data carried out with a university and validation on customers' shop floors.\n\n[To complete: what vibration data the company has already collected and from how many machines.]"
+      },
+      {
+        "heading": "Scope of the R&D service",
+        "body": "1. Preparing a vibration dataset with labelled failures.\n2. Developing and comparing predictive models.\n3. Validating the model on data from customers' shop floors.\n4. A report on the model's results and limitations.\n\n[To complete: the research organisation delivering the service and its offer.]"
+      },
+      {
+        "heading": "Results",
+        "body": "A validated model that predicts spindle failure with a defined lead time and accuracy; a research report that serves as the basis for deciding on the rollout in the product.\n\n[To complete: target prediction lead time and acceptable false alarm rate.]"
+      },
+      {
+        "heading": "Budget and schedule",
+        "body": "Innowacje dla STEP: voucher of up to EUR 200k, 80% of the research service value, 20% own contribution. A free advisory programme (15 hours of consultations) is mandatory before applying; rolling call from 19 October 2026.\n\n[To complete: service value from the research organisation's offer and the research schedule.]"
+      }
+    ],
+    "documents": [
+      {
+        "name": "Confirmation of the advisory programme (15 hours of consultations)",
+        "note": "A mandatory condition of the application; places are limited — sign up as early as possible."
+      },
+      {
+        "name": "Description of the planned research service and its provider (research organisation)",
+        "note": "The scope from this draft and the offer of the selected organisation."
+      },
+      {
+        "name": "SME status declaration",
+        "note": "The company declares small enterprise status."
+      },
+      {
+        "name": "Registration documents confirming a seat or branch in Lower Silesia",
+        "note": "The company operates in the Lower Silesian voivodeship."
+      }
+    ],
+    "openQuestions": [
+      "The net result for the last year is negative — check in the programme regulations whether the financial situation or the own contribution is assessed.",
+      "The company does not know how much de minimis aid it has used — check in the regulations under which form of aid the voucher is granted.",
+      "Ścieżka SMART MŚP (PARP) also fits the profile — it is a larger, formal application, realistic with a concrete product idea."
+    ]
+  }
+}

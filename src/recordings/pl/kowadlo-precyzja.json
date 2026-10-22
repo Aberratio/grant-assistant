@@ -1,11 +1,12 @@
 {
   "version": 1,
   "fixtureId": "kowadlo-precyzja",
-  "inputHash": "075dfe99",
+  "lang": "pl",
+  "inputHash": "50f8d9a4",
   "bestCallId": "digit-2-2026",
   "model": null,
   "source": "prepared",
-  "recordedAt": "2026-10-21",
+  "recordedAt": "2026-10-22",
   "draft": {
     "title": "Wizyjna kontrola jakości z AI zintegrowana z ERP na dwóch liniach tłoczenia w Kowadło Precyzja",
     "summary": "Kowadło Precyzja Sp. z o.o. planuje wdrożyć wizyjną kontrolę jakości opartą na AI na dwóch liniach tłoczenia detali stalowych dla branży AGD i połączyć ją z systemem ERP. Celem jest zastąpienie ręcznej, wyrywkowej kontroli oraz automatyczne raportowanie odrzutów i przyczyn wad.",
@@ -56,7 +57,7 @@
     "openQuestions": [
       "Czy wnioskowana kwota mieści się w 30% średnich rocznych przychodów netto z ostatnich 3 lat?",
       "Czy oferty rozdzielają koszty podstawowe (technologie cyfrowe) od dodatkowych (szkolenia, środki trwałe — do 40%)?",
-      "Warunek dodatniego wyniku finansowego pochodzi z researchu regulaminu — potwierdź go w regulaminie konkursu."
+      "Warunek dodatniego wyniku finansowego wynika z regulaminu konkursu, a nie z ogłoszenia naboru — potwierdź go w aktualnej wersji regulaminu."
     ]
   }
 }

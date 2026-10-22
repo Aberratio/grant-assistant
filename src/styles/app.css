@@ -109,25 +109,94 @@ p {
 .topbar {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-2) var(--space-5);
+  gap: var(--space-3) var(--space-5);
   margin: var(--space-5) 0;
 }
 
+/* Legal notice: a bordered callout in the warning colour, read before any result. */
 .disclaimer {
   flex: 1 1 var(--disclaimer-basis);
   max-width: var(--measure-lead);
-  margin: 0;
-  padding-left: var(--space-3);
-  border-left: 2px solid var(--color-line);
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-raised);
+  border: var(--border-width) solid var(--color-warning);
+  border-left-width: var(--disclaimer-rule);
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text);
 }
 
-.disclaimer strong {
+.disclaimer p {
+  margin: 0;
+}
+
+.disclaimer-icon {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: var(--icon-column);
+  height: var(--icon-column);
+  border-radius: 50%;
+  background: var(--color-warning);
+  color: var(--color-on-accent);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+}
+
+.disclaimer .disclaimer-title {
   font-weight: var(--weight-semibold);
+  color: var(--color-warning);
+  margin-bottom: var(--space-1);
+}
+
+.topbar-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+}
+
+/* Language switch: two-button segmented control. */
+.lang-switch {
+  display: inline-flex;
+  border: var(--border-width) solid var(--color-text-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.lang-switch button {
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  min-width: var(--lang-button-min);
+  min-height: var(--lang-button-min);
+  padding: 0 var(--space-2);
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition:
+    color var(--transition),
+    background var(--transition);
+}
+
+.lang-switch button + button {
+  border-left: var(--border-width) solid var(--color-text-subtle);
+}
+
+.lang-switch button:hover {
   color: var(--color-text);
+}
+
+.lang-switch button[aria-pressed='true'] {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
 }
 
 .mode {
@@ -566,6 +635,10 @@ p {
   to {
     transform: rotate(360deg);
   }
+}
+
+.draft-hint {
+  color: var(--color-text-muted);
 }
 
 .error {

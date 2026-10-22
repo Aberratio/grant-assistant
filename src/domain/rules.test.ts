@@ -1,18 +1,20 @@
 import { describe, expect, it } from 'vitest';
+import { LANGS } from '../i18n/lang';
+import { messages } from '../i18n/messages';
 import { assess, evaluateCall, rank } from './rules';
 import type { CallMatch, CompanyProfile, ConditionResult } from './types';
 
 /** A fictional manufacturing SME that meets every Dig.IT 2/2026 condition. */
 const base: CompanyProfile = {
-  name: 'Przykładowa Sp. z o.o.',
-  industry: 'produkcja',
-  size: 'mala',
+  name: 'Sample Manufacturing Ltd (fictional)',
+  industry: 'manufacturing',
+  size: 'small',
   voivodeship: 'wielkopolskie',
   closedFiscalYears: 8,
   netResultPln: 250_000,
-  deMinimisAvailable: 'tak',
-  need: 'cyfryzacja',
-  description: 'Wdrożenie systemu MES i wizyjnej kontroli jakości.',
+  deMinimisAvailable: 'yes',
+  need: 'digital',
+  description: 'Rollout of an MES and visual quality inspection.',
 };
 
 const company = (patch: Partial<CompanyProfile>): CompanyProfile => ({ ...base, ...patch });
@@ -25,7 +27,7 @@ function condition(match: CallMatch, id: string): ConditionResult {
 
 describe('Dig.IT 2/2026 eligibility', () => {
   const digit = (patch: Partial<CompanyProfile> = {}) =>
-    evaluateCall(company(patch), 'digit-2-2026');
+    evaluateCall(company(patch), 'digit-2-2026', 'en');
 
   it('accepts a manufacturing SME meeting every condition', () => {
     const match = digit();
@@ -41,12 +43,14 @@ describe('Dig.IT 2/2026 eligibility', () => {
       [6, 'met'],
     ] as const)('%i closed years → %s', (years, status) => {
       const match = digit({ closedFiscalYears: years });
-      expect(condition(match, 'lata').status).toBe(status);
+      expect(condition(match, 'years').status).toBe(status);
       expect(match.status).toBe(status === 'met' ? 'eligible' : 'ineligible');
     });
 
-    it('names how many years are missing', () => {
-      expect(condition(digit({ closedFiscalYears: 3 }), 'lata').detail).toContain('brakuje 2');
+    it('names how many years are missing, in both languages', () => {
+      expect(condition(digit({ closedFiscalYears: 3 }), 'years').detail).toContain('2 short');
+      const pl = evaluateCall(company({ closedFiscalYears: 3 }), 'digit-2-2026', 'pl');
+      expect(condition(pl, 'years').detail).toBe(messages('pl').rules.digit.yearsUnmet(3, 2));
     });
   });
 
@@ -58,39 +62,39 @@ describe('Dig.IT 2/2026 eligibility', () => {
       [null, 'uncertain', 'conditional'],
     ] as const)('net result %s → %s', (net, status, overall) => {
       const match = digit({ netResultPln: net });
-      expect(condition(match, 'wynik').status).toBe(status);
+      expect(condition(match, 'net-result').status).toBe(status);
       expect(match.status).toBe(overall);
     });
   });
 
   describe('manufacturing sector', () => {
     it.each([
-      ['produkcja', 'met'],
-      ['uslugi_produkcyjne', 'met'],
+      ['manufacturing', 'met'],
+      ['manufacturing_services', 'met'],
       ['it', 'unmet'],
-      ['handel', 'unmet'],
-      ['uslugi', 'unmet'],
+      ['retail', 'unmet'],
+      ['services', 'unmet'],
     ] as const)('%s → %s', (industry, status) => {
-      expect(condition(digit({ industry }), 'branza').status).toBe(status);
+      expect(condition(digit({ industry }), 'sector').status).toBe(status);
     });
   });
 
   describe('SME status', () => {
     it.each([
-      ['mikro', 'met'],
-      ['mala', 'met'],
-      ['srednia', 'met'],
-      ['duza', 'unmet'],
+      ['micro', 'met'],
+      ['small', 'met'],
+      ['medium', 'met'],
+      ['large', 'unmet'],
     ] as const)('%s → %s', (size, status) => {
-      expect(condition(digit({ size }), 'msp').status).toBe(status);
+      expect(condition(digit({ size }), 'sme').status).toBe(status);
     });
   });
 
   describe('de minimis limit', () => {
     it.each([
-      ['tak', 'met', 'eligible'],
-      ['nie', 'unmet', 'ineligible'],
-      ['nie_wiem', 'uncertain', 'conditional'],
+      ['yes', 'met', 'eligible'],
+      ['no', 'unmet', 'ineligible'],
+      ['unknown', 'uncertain', 'conditional'],
     ] as const)('%s → %s', (deMinimisAvailable, status, overall) => {
       const match = digit({ deMinimisAvailable });
       expect(condition(match, 'de-minimis').status).toBe(status);
@@ -100,29 +104,29 @@ describe('Dig.IT 2/2026 eligibility', () => {
 
   describe('project scope', () => {
     it.each([
-      ['cyfryzacja', 'met'],
-      ['szkolenia', 'uncertain'],
-      ['br', 'uncertain'],
+      ['digital', 'met'],
+      ['training', 'uncertain'],
+      ['rnd', 'uncertain'],
     ] as const)('need %s → %s', (need, status) => {
-      expect(condition(digit({ need }), 'zakres').status).toBe(status);
+      expect(condition(digit({ need }), 'scope').status).toBe(status);
     });
   });
 
   it('lists every failed condition, not only the first', () => {
-    const match = digit({ closedFiscalYears: 2, netResultPln: -5_000, size: 'duza' });
+    const match = digit({ closedFiscalYears: 2, netResultPln: -5_000, size: 'large' });
     const unmet = match.conditions.filter((c) => c.status === 'unmet').map((c) => c.id);
-    expect(unmet).toEqual(['msp', 'lata', 'wynik']);
+    expect(unmet).toEqual(['sme', 'years', 'net-result']);
   });
 });
 
 describe('Innowacje dla STEP eligibility', () => {
   const step = (patch: Partial<CompanyProfile>) =>
-    evaluateCall(company(patch), 'innowacje-dla-step');
+    evaluateCall(company(patch), 'innowacje-dla-step', 'en');
 
   it('accepts a Lower Silesian SME with an R&D need, regardless of sector or age', () => {
     const match = step({
       voivodeship: 'dolnoslaskie',
-      need: 'br',
+      need: 'rnd',
       industry: 'it',
       closedFiscalYears: 1,
       netResultPln: -40_000,
@@ -131,73 +135,75 @@ describe('Innowacje dla STEP eligibility', () => {
   });
 
   it('rejects a company outside Lower Silesia', () => {
-    const match = step({ voivodeship: 'opolskie', need: 'br' });
+    const match = step({ voivodeship: 'opolskie', need: 'rnd' });
     expect(condition(match, 'region').status).toBe('unmet');
     expect(match.status).toBe('ineligible');
   });
 
   it('rejects a large enterprise', () => {
-    expect(step({ voivodeship: 'dolnoslaskie', need: 'br', size: 'duza' }).status).toBe(
+    expect(step({ voivodeship: 'dolnoslaskie', need: 'rnd', size: 'large' }).status).toBe(
       'ineligible',
     );
   });
 
   it('rejects a need that is not an R&D service', () => {
-    const match = step({ voivodeship: 'dolnoslaskie', need: 'cyfryzacja' });
-    expect(condition(match, 'zakres').status).toBe('unmet');
+    const match = step({ voivodeship: 'dolnoslaskie', need: 'digital' });
+    expect(condition(match, 'scope').status).toBe('unmet');
   });
 });
 
-describe('Ścieżka SMART MŚP eligibility', () => {
+describe('SMART path (sciezka-smart-msp) eligibility', () => {
   const smart = (patch: Partial<CompanyProfile>) =>
-    evaluateCall(company(patch), 'sciezka-smart-msp');
+    evaluateCall(company(patch), 'sciezka-smart-msp', 'en');
 
   it('accepts an SME from any region with an R&D need', () => {
-    expect(smart({ voivodeship: 'podlaskie', need: 'br' }).status).toBe('eligible');
+    expect(smart({ voivodeship: 'podlaskie', need: 'rnd' }).status).toBe('eligible');
   });
 
   it('requires R&D work', () => {
-    const match = smart({ need: 'szkolenia' });
-    expect(condition(match, 'zakres').status).toBe('unmet');
+    const match = smart({ need: 'training' });
+    expect(condition(match, 'scope').status).toBe('unmet');
     expect(match.status).toBe('ineligible');
   });
 
   it('rejects a large enterprise', () => {
-    expect(smart({ need: 'br', size: 'duza' }).status).toBe('ineligible');
+    expect(smart({ need: 'rnd', size: 'large' }).status).toBe('ineligible');
   });
 });
 
-describe('Usługi rozwojowe 7.4A FEDS eligibility', () => {
+describe('Development services 7.4A FEDS eligibility', () => {
   const feds = (patch: Partial<CompanyProfile>) =>
-    evaluateCall(company(patch), 'uslugi-rozwojowe-7-4a');
+    evaluateCall(company(patch), 'uslugi-rozwojowe-7-4a', 'en');
 
   it('accepts a Lower Silesian SME that wants training', () => {
-    expect(feds({ voivodeship: 'dolnoslaskie', need: 'szkolenia' }).status).toBe('eligible');
+    expect(feds({ voivodeship: 'dolnoslaskie', need: 'training' }).status).toBe('eligible');
   });
 
   it('rejects a large enterprise', () => {
-    expect(feds({ voivodeship: 'dolnoslaskie', need: 'szkolenia', size: 'duza' }).status).toBe(
+    expect(feds({ voivodeship: 'dolnoslaskie', need: 'training', size: 'large' }).status).toBe(
       'ineligible',
     );
   });
 
   it('rejects a company outside Lower Silesia', () => {
-    expect(feds({ voivodeship: 'slaskie', need: 'szkolenia' }).status).toBe('ineligible');
+    expect(feds({ voivodeship: 'slaskie', need: 'training' }).status).toBe('ineligible');
   });
 
   it('rejects a need other than a development service', () => {
-    expect(feds({ voivodeship: 'dolnoslaskie', need: 'br' }).status).toBe('ineligible');
+    expect(feds({ voivodeship: 'dolnoslaskie', need: 'rnd' }).status).toBe('ineligible');
   });
 });
 
 describe('evaluateCall', () => {
   it('throws on an unknown call id', () => {
-    expect(() => evaluateCall(base, 'nope')).toThrow('Unknown funding call');
+    expect(() => evaluateCall(base, 'nope', 'en')).toThrow('Unknown funding call');
   });
 
   it('gives every condition a non-empty explanation', () => {
-    for (const match of assess(company({ netResultPln: null })).ranked) {
-      for (const c of match.conditions) expect(c.detail.length).toBeGreaterThan(10);
+    for (const lang of LANGS) {
+      for (const match of assess(company({ netResultPln: null }), lang).ranked) {
+        for (const c of match.conditions) expect(c.detail.length).toBeGreaterThan(10);
+      }
     }
   });
 });
@@ -251,17 +257,17 @@ describe('rank', () => {
 
 describe('assess', () => {
   it('picks Dig.IT for a mature, profitable manufacturer that wants digitalisation', () => {
-    expect(assess(base).best?.callId).toBe('digit-2-2026');
+    expect(assess(base, 'en').best?.callId).toBe('digit-2-2026');
   });
 
   it('picks the STEP voucher over SMART for a Lower Silesian R&D project', () => {
-    const result = assess(company({ voivodeship: 'dolnoslaskie', need: 'br' }));
+    const result = assess(company({ voivodeship: 'dolnoslaskie', need: 'rnd' }), 'en');
     expect(result.best?.callId).toBe('innowacje-dla-step');
     expect(result.ranked[1]?.callId).toBe('sciezka-smart-msp');
   });
 
   it('picks the 7.4A training subsidy for a Lower Silesian SME that wants training', () => {
-    const result = assess(company({ voivodeship: 'dolnoslaskie', need: 'szkolenia' }));
+    const result = assess(company({ voivodeship: 'dolnoslaskie', need: 'training' }), 'en');
     expect(result.best?.callId).toBe('uslugi-rozwojowe-7-4a');
     // Dig.IT would still be possible (training as an additional cost), so it ranks next.
     expect(result.ranked[1]?.callId).toBe('digit-2-2026');
@@ -269,12 +275,41 @@ describe('assess', () => {
   });
 
   it('returns no best match when every call is ineligible', () => {
-    const result = assess(company({ size: 'duza' }));
+    const result = assess(company({ size: 'large' }), 'en');
     expect(result.best).toBeNull();
     expect(result.ranked).toHaveLength(4);
   });
 
   it('is deterministic for the same input', () => {
-    expect(assess(base)).toEqual(assess(structuredClone(base)));
+    expect(assess(base, 'en')).toEqual(assess(structuredClone(base), 'en'));
+  });
+});
+
+describe('language', () => {
+  it('decides the same statuses in every language; only the wording differs', () => {
+    const variants: Partial<CompanyProfile>[] = [
+      {},
+      { netResultPln: null },
+      { size: 'large' },
+      { voivodeship: 'dolnoslaskie', need: 'rnd' },
+      { closedFiscalYears: 2, deMinimisAvailable: 'unknown' },
+    ];
+    for (const patch of variants) {
+      const [en, pl] = LANGS.map((lang) => assess(company(patch), lang));
+      const decision = (r: typeof en) =>
+        r!.ranked.map((m) => [m.callId, m.status, m.conditions.map((c) => [c.id, c.status])]);
+      expect(decision(pl), JSON.stringify(patch)).toEqual(decision(en));
+      expect(pl!.ranked[0]!.conditions[0]!.label).not.toBe(en!.ranked[0]!.conditions[0]!.label);
+    }
+  });
+
+  it('explains the years condition with the Polish plural form', () => {
+    const t = messages('pl').rules.digit;
+    const detail = (years: number) =>
+      condition(evaluateCall(company({ closedFiscalYears: years }), 'digit-2-2026', 'pl'), 'years')
+        .detail;
+    expect(detail(3)).toBe(t.yearsUnmet(3, 2));
+    expect(detail(22)).toBe(t.yearsMet(22));
+    expect(t.yearsMet(22)).not.toBe(t.yearsMet(12).replace('12', '22'));
   });
 });

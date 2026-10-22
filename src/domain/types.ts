@@ -1,10 +1,17 @@
 /** Company profile entered in the form. All companies in this repo are fictional. */
-export const INDUSTRIES = ['produkcja', 'uslugi_produkcyjne', 'it', 'handel', 'uslugi'] as const;
+export const INDUSTRIES = [
+  'manufacturing',
+  'manufacturing_services',
+  'it',
+  'retail',
+  'services',
+] as const;
 export type Industry = (typeof INDUSTRIES)[number];
 
-export const COMPANY_SIZES = ['mikro', 'mala', 'srednia', 'duza'] as const;
+export const COMPANY_SIZES = ['micro', 'small', 'medium', 'large'] as const;
 export type CompanySize = (typeof COMPANY_SIZES)[number];
 
+/** Polish voivodeships (regions); ids are their ASCII-folded Polish names. */
 export const VOIVODESHIPS = [
   'dolnoslaskie',
   'kujawsko-pomorskie',
@@ -26,10 +33,10 @@ export const VOIVODESHIPS = [
 export type Voivodeship = (typeof VOIVODESHIPS)[number];
 
 /** What the company wants to finance. */
-export const NEEDS = ['cyfryzacja', 'br', 'szkolenia'] as const;
+export const NEEDS = ['digital', 'rnd', 'training'] as const;
 export type Need = (typeof NEEDS)[number];
 
-export const DE_MINIMIS = ['tak', 'nie', 'nie_wiem'] as const;
+export const DE_MINIMIS = ['yes', 'no', 'unknown'] as const;
 export type DeMinimis = (typeof DE_MINIMIS)[number];
 
 /** Input limits shared by the form (client) and the API schema (server). */

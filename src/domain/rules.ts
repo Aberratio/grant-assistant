@@ -1,15 +1,19 @@
 /**
  * Deterministic eligibility rules. No LLM is involved here: the model only gets
  * the result of these rules and writes the draft for the best match.
+ *
+ * The decision (each condition's status) does not depend on the language; `lang`
+ * only selects the wording of labels and explanations.
  */
-import { CALLS, getCall, type FundingCall } from '../data/calls';
+import { CALL_IDS, getCall, type FundingCall } from '../data/calls';
+import type { Lang } from '../i18n/lang';
+import { messages, type Messages } from '../i18n/messages';
 import type {
   CallMatch,
   CompanyProfile,
   ConditionResult,
   ConditionStatus,
   MatchStatus,
-  Need,
 } from './types';
 
 export interface Assessment {
@@ -21,11 +25,7 @@ export interface Assessment {
 
 export const DIGIT_MIN_CLOSED_YEARS = 5;
 
-const NEED_LABEL: Record<Need, string> = {
-  cyfryzacja: 'wdrożenie technologii cyfrowych',
-  br: 'prace badawczo-rozwojowe (B+R)',
-  szkolenia: 'szkolenia i usługi rozwojowe',
-};
+type RuleText = Messages['rules'];
 
 const cond = (
   id: string,
@@ -34,166 +34,88 @@ const cond = (
   detail: string,
 ): ConditionResult => ({ id, label, status, detail });
 
-function sme(company: CompanyProfile): ConditionResult {
-  return company.size === 'duza'
-    ? cond('msp', 'Status MŚP', 'unmet', 'Nabór jest tylko dla mikro, małych i średnich firm.')
-    : cond(
-        'msp',
-        'Status MŚP',
-        'met',
-        'Firma deklaruje status mikro, małego lub średniego przedsiębiorstwa.',
-      );
+function sme(company: CompanyProfile, t: RuleText): ConditionResult {
+  return company.size === 'large'
+    ? cond('sme', t.sme.label, 'unmet', t.sme.unmet)
+    : cond('sme', t.sme.label, 'met', t.sme.met);
 }
 
-function lowerSilesia(company: CompanyProfile): ConditionResult {
+function lowerSilesia(company: CompanyProfile, t: RuleText): ConditionResult {
   return company.voivodeship === 'dolnoslaskie'
-    ? cond(
-        'region',
-        'Siedziba na Dolnym Śląsku',
-        'met',
-        'Firma działa w województwie dolnośląskim.',
-      )
-    : cond(
-        'region',
-        'Siedziba na Dolnym Śląsku',
-        'unmet',
-        'Program finansuje tylko firmy z województwa dolnośląskiego.',
-      );
+    ? cond('region', t.region.label, 'met', t.region.met)
+    : cond('region', t.region.label, 'unmet', t.region.unmet);
 }
 
-function scope(company: CompanyProfile, call: FundingCall, label: string): ConditionResult {
+function scope(
+  company: CompanyProfile,
+  call: FundingCall,
+  label: string,
+  t: RuleText,
+): ConditionResult {
   return call.needs.includes(company.need)
-    ? cond(
-        'zakres',
-        label,
-        'met',
-        `Potrzeba firmy (${NEED_LABEL[company.need]}) mieści się w zakresie naboru.`,
-      )
+    ? cond('scope', label, 'met', t.scope.met(t.need[company.need]))
     : cond(
-        'zakres',
+        'scope',
         label,
         'unmet',
-        `Nabór finansuje: ${call.needs.map((n) => NEED_LABEL[n]).join(', ')} — a nie ${NEED_LABEL[company.need]}.`,
+        t.scope.unmet(call.needs.map((n) => t.need[n]).join(', '), t.need[company.need]),
       );
 }
 
-function digitConditions(company: CompanyProfile): ConditionResult[] {
+function digitConditions(company: CompanyProfile, t: RuleText): ConditionResult[] {
+  const d = t.digit;
   const manufacturing =
-    company.industry === 'produkcja' || company.industry === 'uslugi_produkcyjne';
+    company.industry === 'manufacturing' || company.industry === 'manufacturing_services';
   const years = company.closedFiscalYears;
   const missingYears = DIGIT_MIN_CLOSED_YEARS - years;
   const net = company.netResultPln;
+  const yearsLabel = d.yearsLabel(DIGIT_MIN_CLOSED_YEARS);
 
-  const scopeByNeed: Record<Need, ConditionResult> = {
-    cyfryzacja: cond(
-      'zakres',
-      'Projekt wdraża technologie cyfrowe',
-      'met',
-      'Dig.IT finansuje gotowe i dedykowane technologie cyfrowe, w tym AI, analitykę i automatyzację.',
-    ),
-    szkolenia: cond(
-      'zakres',
-      'Projekt wdraża technologie cyfrowe',
-      'uncertain',
-      'Szkolenia są kwalifikowalne tylko jako koszt dodatkowy (do 40%) przy wdrożeniu technologii cyfrowej.',
-    ),
-    br: cond(
-      'zakres',
-      'Projekt wdraża technologie cyfrowe',
-      'uncertain',
-      'Dig.IT finansuje wdrożenie technologii cyfrowych, nie prace B+R — pasuje tylko, jeśli projekt jest wdrożeniem.',
-    ),
+  const scopeStatus: Record<CompanyProfile['need'], ConditionStatus> = {
+    digital: 'met',
+    training: 'uncertain',
+    rnd: 'uncertain',
   };
 
   return [
-    sme(company),
+    sme(company, t),
     manufacturing
-      ? cond(
-          'branza',
-          'Przetwórstwo przemysłowe lub usługi produkcyjne',
-          'met',
-          'Główna działalność to produkcja lub usługi produkcyjne.',
-        )
-      : cond(
-          'branza',
-          'Przetwórstwo przemysłowe lub usługi produkcyjne',
-          'unmet',
-          'Dig.IT jest dla firm, których główną działalnością jest przetwórstwo przemysłowe lub usługi produkcyjne.',
-        ),
+      ? cond('sector', d.industryLabel, 'met', d.industryMet)
+      : cond('sector', d.industryLabel, 'unmet', d.industryUnmet),
     missingYears <= 0
-      ? cond(
-          'lata',
-          `Co najmniej ${DIGIT_MIN_CLOSED_YEARS} zamkniętych lat obrotowych`,
-          'met',
-          `Firma ma ${years} zamkniętych lat obrotowych.`,
-        )
-      : cond(
-          'lata',
-          `Co najmniej ${DIGIT_MIN_CLOSED_YEARS} zamkniętych lat obrotowych`,
-          'unmet',
-          `Firma ma ${years} zamkniętych lat obrotowych — brakuje ${missingYears}.`,
-        ),
+      ? cond('years', yearsLabel, 'met', d.yearsMet(years))
+      : cond('years', yearsLabel, 'unmet', d.yearsUnmet(years, missingYears)),
     net === null
-      ? cond(
-          'wynik',
-          'Dodatni wynik finansowy',
-          'uncertain',
-          'Brak danych o wyniku netto za ostatni zamknięty rok — sprawdź w sprawozdaniu.',
-        )
+      ? cond('net-result', d.netLabel, 'uncertain', d.netUnknown)
       : net > 0
-        ? cond(
-            'wynik',
-            'Dodatni wynik finansowy',
-            'met',
-            'Wynik netto za ostatni zamknięty rok jest dodatni.',
-          )
-        : cond(
-            'wynik',
-            'Dodatni wynik finansowy',
-            'unmet',
-            net === 0
-              ? 'Wynik netto wynosi zero — warunek wymaga wyniku dodatniego.'
-              : 'Wynik netto za ostatni zamknięty rok jest ujemny.',
-          ),
-    company.deMinimisAvailable === 'tak'
-      ? cond(
-          'de-minimis',
-          'Wolny limit pomocy de minimis',
-          'met',
-          'Firma deklaruje niewykorzystany limit de minimis.',
-        )
-      : company.deMinimisAvailable === 'nie'
-        ? cond(
-            'de-minimis',
-            'Wolny limit pomocy de minimis',
-            'unmet',
-            'Grant jest pomocą de minimis — bez wolnego limitu nie można go otrzymać.',
-          )
-        : cond(
-            'de-minimis',
-            'Wolny limit pomocy de minimis',
-            'uncertain',
-            'Sprawdź pomoc de minimis z ostatnich 3 lat w SUDOP — grant musi zmieścić się w limicie.',
-          ),
-    scopeByNeed[company.need],
+        ? cond('net-result', d.netLabel, 'met', d.netPositive)
+        : cond('net-result', d.netLabel, 'unmet', net === 0 ? d.netZero : d.netNegative),
+    company.deMinimisAvailable === 'yes'
+      ? cond('de-minimis', d.deMinimisLabel, 'met', d.deMinimisYes)
+      : company.deMinimisAvailable === 'no'
+        ? cond('de-minimis', d.deMinimisLabel, 'unmet', d.deMinimisNo)
+        : cond('de-minimis', d.deMinimisLabel, 'uncertain', d.deMinimisUnknown),
+    cond('scope', d.scopeLabel, scopeStatus[company.need], d.scope[company.need]),
   ];
 }
 
-const RULES: Record<string, (company: CompanyProfile, call: FundingCall) => ConditionResult[]> = {
-  'digit-2-2026': (company) => digitConditions(company),
-  'innowacje-dla-step': (company, call) => [
-    sme(company),
-    lowerSilesia(company),
-    scope(company, call, 'Usługa badawcza (B+R) od jednostki naukowej'),
+type Rule = (company: CompanyProfile, call: FundingCall, t: RuleText) => ConditionResult[];
+
+const RULES: Record<string, Rule> = {
+  'digit-2-2026': (company, _call, t) => digitConditions(company, t),
+  'innowacje-dla-step': (company, call, t) => [
+    sme(company, t),
+    lowerSilesia(company, t),
+    scope(company, call, t.scope.rndServiceLabel, t),
   ],
-  'uslugi-rozwojowe-7-4a': (company, call) => [
-    sme(company),
-    lowerSilesia(company),
-    scope(company, call, 'Usługa rozwojowa z Bazy Usług Rozwojowych'),
+  'uslugi-rozwojowe-7-4a': (company, call, t) => [
+    sme(company, t),
+    lowerSilesia(company, t),
+    scope(company, call, t.scope.developmentServiceLabel, t),
   ],
-  'sciezka-smart-msp': (company, call) => [
-    sme(company),
-    scope(company, call, 'Projekt obejmuje obowiązkowy moduł B+R'),
+  'sciezka-smart-msp': (company, call, t) => [
+    sme(company, t),
+    scope(company, call, t.scope.rndModuleLabel, t),
   ],
 };
 
@@ -203,11 +125,11 @@ function statusOf(conditions: readonly ConditionResult[]): MatchStatus {
   return 'eligible';
 }
 
-export function evaluateCall(company: CompanyProfile, callId: string): CallMatch {
-  const call = getCall(callId);
+export function evaluateCall(company: CompanyProfile, callId: string, lang: Lang): CallMatch {
+  const call = getCall(callId, lang);
   const rules = RULES[call.id];
   if (!rules) throw new Error(`No rules for funding call: ${call.id}`);
-  const conditions = rules(company, call);
+  const conditions = rules(company, call, messages(lang).rules);
   return { callId: call.id, status: statusOf(conditions), conditions };
 }
 
@@ -215,7 +137,7 @@ const STATUS_ORDER: Record<MatchStatus, number> = { eligible: 0, conditional: 1,
 
 const openQuestions = (m: CallMatch) => m.conditions.filter((c) => c.status === 'uncertain').length;
 
-const curatedOrder = (callId: string) => CALLS.findIndex((c) => c.id === callId);
+const curatedOrder = (callId: string) => CALL_IDS.indexOf(callId);
 
 /** Status first, then fewer open questions, then the curated call order. */
 export function rank(matches: readonly CallMatch[]): CallMatch[] {
@@ -227,8 +149,8 @@ export function rank(matches: readonly CallMatch[]): CallMatch[] {
   );
 }
 
-export function assess(company: CompanyProfile): Assessment {
-  const ranked = rank(CALLS.map((call) => evaluateCall(company, call.id)));
+export function assess(company: CompanyProfile, lang: Lang): Assessment {
+  const ranked = rank(CALL_IDS.map((id) => evaluateCall(company, id, lang)));
   const best = ranked.find((m) => m.status !== 'ineligible') ?? null;
   return { ranked, best };
 }

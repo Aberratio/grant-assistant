@@ -8,6 +8,7 @@ import {
   VOIVODESHIPS,
   type CompanyProfile,
 } from '../src/domain/types';
+import { FALLBACK_LANG, LANGS } from '../src/i18n/lang';
 
 /** Validates the company profile posted by the browser before anything else runs. */
 export const CompanySchema = z
@@ -24,7 +25,11 @@ export const CompanySchema = z
   })
   .strict();
 
-export const DraftRequestSchema = z.object({ company: CompanySchema });
+/** `lang` selects the wording of the rule result and the draft; it defaults to English. */
+export const DraftRequestSchema = z.object({
+  company: CompanySchema,
+  lang: z.enum(LANGS).default(FALLBACK_LANG),
+});
 
 // Compile-time guard: the schema output must be a CompanyProfile.
 export const companyTypesAgree: z.infer<typeof CompanySchema> extends CompanyProfile
