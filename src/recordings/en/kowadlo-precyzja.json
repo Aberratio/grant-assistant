@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "fixtureId": "kowadlo-precyzja",
+  "lang": "en",
+  "inputHash": "3281b1eb",
+  "bestCallId": "digit-2-2026",
+  "model": null,
+  "source": "prepared",
+  "recordedAt": "2026-10-22",
+  "draft": {
+    "title": "AI-based visual quality inspection integrated with the ERP on two stamping lines at Kowadło Precyzja",
+    "summary": "Kowadło Precyzja Sp. z o.o. plans to roll out AI-based visual quality inspection on two lines stamping steel parts for household appliance makers and to connect it to its ERP system. The goal is to replace manual spot checks and to report rejects and defect causes automatically.",
+    "sections": [
+      {
+        "heading": "Problem and current situation",
+        "body": "The company (about 45 people, two shifts) stamps steel parts for household appliance makers. Quality control is manual and based on spot checks, and the number of complaints is rising. Information about rejects and defect causes does not reach the ERP reports automatically.\n\n[To complete: number of complaints and cost of defects over the last 12 months — baseline values for the indicators.]"
+      },
+      {
+        "heading": "Solution and project scope",
+        "body": "1. Requirements analysis: defect types to detect, line cycle time, camera mounting points.\n2. Supply and installation of vision stations on two stamping lines.\n3. Preparation and validation of an AI model that recognises defects in part images.\n4. ERP integration: rejects and defect causes recorded automatically.\n5. Training for operators and the quality team — as an additional cost, within the 40% limit of eligible costs.\n\nThe project may not start before the application is submitted. [To complete: contractors selected on the basis of at least 3 quotes.]"
+      },
+      {
+        "heading": "Results and indicators",
+        "body": "Every part on both lines inspected instead of spot checks; rejects and defect causes recorded in the ERP without manual re-entry; fewer quality complaints.\n\n[To complete with baseline and target values: number of complaints, share of defects caught before shipment, time from detecting a defect to the report.]"
+      },
+      {
+        "heading": "Budget and schedule",
+        "body": "Dig.IT 2/2026: grant of PLN 150–850k, up to 50% of eligible costs, de minimis aid, reimbursed after the project ends — the company pre-finances the full cost until settlement. The grant may not exceed 30% of average annual net revenue over the last 3 years.\n\n[To complete: budget from the quotes, own contribution, schedule of stages 1–5.]"
+      }
+    ],
+    "documents": [
+      {
+        "name": "Grant application (annex 2)",
+        "note": "The project description from this draft, completed with baseline values and the budget from the quotes."
+      },
+      {
+        "name": "Statement on financial statements (annex 4) and the statements for 5 closed fiscal years",
+        "note": "The company has 12 closed fiscal years; the result for the last year is positive (PLN 410,000)."
+      },
+      {
+        "name": "At least 3 price quotes",
+        "note": "For the vision stations, the AI model and the ERP integration — best collected before the call opens on 2 November 2026."
+      },
+      {
+        "name": "Authorisation for checks in BIG InfoMonitor and BIK (annex 5)",
+        "note": "Template in the ARP call documentation."
+      },
+      {
+        "name": "Statement on paper documentation (annex 6)",
+        "note": "Template in the ARP call documentation."
+      },
+      {
+        "name": "Summary of de minimis aid received in the last 3 years",
+        "note": "The company declares an available limit — the summary will show whether the requested grant fits within it."
+      }
+    ],
+    "openQuestions": [
+      "Does the requested amount fit within 30% of average annual net revenue over the last 3 years?",
+      "Do the quotes separate core costs (digital technology) from additional costs (training, fixed assets — up to 40%)?",
+      "The positive net result condition comes from the call regulations rather than the call announcement — confirm it in the current version of the regulations."
+    ]
+  }
+}

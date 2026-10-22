@@ -7,8 +7,10 @@ import { z } from 'zod';
 import type { Draft } from './draft';
 
 export const DraftSchema = z.object({
-  title: z.string().describe('Working title of the project, in Polish.'),
-  summary: z.string().describe('2–3 sentence summary of the project, in Polish.'),
+  title: z.string().describe('Working title of the project, in the requested output language.'),
+  summary: z
+    .string()
+    .describe('2–3 sentence summary of the project, in the requested output language.'),
   sections: z
     .array(
       z.object({
@@ -17,7 +19,7 @@ export const DraftSchema = z.object({
       }),
     )
     .describe(
-      'Project description sections in Polish: problem, solution and scope, expected results, budget and schedule outline.',
+      'Project description sections in the requested output language: problem, solution and scope, expected results, budget and schedule outline.',
     ),
   documents: z
     .array(
@@ -26,10 +28,12 @@ export const DraftSchema = z.object({
         note: z.string().describe('What to prepare and why, specific to this company.'),
       }),
     )
-    .describe('Documents to prepare for this call, in Polish.'),
+    .describe('Documents to prepare for this call, in the requested output language.'),
   openQuestions: z
     .array(z.string())
-    .describe('Things to verify before applying (uncertain conditions, data gaps), in Polish.'),
+    .describe(
+      'Things to verify before applying (uncertain conditions, data gaps), in the requested output language.',
+    ),
 });
 
 // Compile-time guard: the schema and the hand-written type must agree.

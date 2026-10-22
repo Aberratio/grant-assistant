@@ -4,9 +4,9 @@ import { getFixture } from '../src/fixtures/companies';
 import { buildPrompt, SYSTEM_PROMPT } from './prompt';
 
 describe('buildPrompt', () => {
-  const { company } = getFixture('ceramika-wartka');
-  const assessment = assess(company);
-  const prompt = buildPrompt(company, assessment);
+  const company = getFixture('ceramika-wartka').company.en;
+  const assessment = assess(company, 'en');
+  const prompt = buildPrompt(company, assessment, 'en');
 
   it('keeps the system prompt fixed (no per-request data, so it caches)', () => {
     expect(prompt.system).toBe(SYSTEM_PROMPT);
@@ -14,8 +14,8 @@ describe('buildPrompt', () => {
   });
 
   it('tells the model the rules are decided and must not be re-judged', () => {
-    expect(SYSTEM_PROMPT).toMatch(/nie oceniaj kwalifikowalności ponownie/i);
-    expect(SYSTEM_PROMPT).toMatch(/nie jest poradą prawną/i);
+    expect(SYSTEM_PROMPT).toMatch(/do not judge eligibility again/i);
+    expect(SYSTEM_PROMPT).toMatch(/not legal advice/i);
   });
 
   it('carries the company, the best call and every condition with its status', () => {
@@ -27,12 +27,12 @@ describe('buildPrompt', () => {
     };
     expect(best.call.id).toBe('digit-2-2026');
     expect(best.conditions.map((c) => `${c.id}:${c.status}`)).toEqual([
-      'msp:met',
-      'branza:met',
-      'lata:met',
-      'wynik:uncertain',
+      'sme:met',
+      'sector:met',
+      'years:met',
+      'net-result:uncertain',
       'de-minimis:uncertain',
-      'zakres:met',
+      'scope:met',
     ]);
     expect(best.call.documents.length).toBeGreaterThan(3);
   });
@@ -46,11 +46,19 @@ describe('buildPrompt', () => {
       'uslugi-rozwojowe-7-4a',
       'sciezka-smart-msp',
     ]);
-    expect(user.otherCalls[0]!.unmet).toContain('Siedziba na Dolnym Śląsku');
+    expect(user.otherCalls[0]!.unmet).toContain('Registered in Lower Silesia');
+  });
+
+  it('asks for the output language in the user message, keeping the system prompt fixed', () => {
+    const pl = getFixture('ceramika-wartka').company.pl;
+    const polish = buildPrompt(pl, assess(pl, 'pl'), 'pl');
+    expect(polish.system).toBe(prompt.system);
+    expect(JSON.parse(polish.user)).toMatchObject({ outputLanguage: 'Polish' });
+    expect(JSON.parse(prompt.user)).toMatchObject({ outputLanguage: 'English' });
   });
 
   it('throws when there is no best match (the server must not call the model then)', () => {
-    const big = { ...company, size: 'duza' as const };
-    expect(() => buildPrompt(big, assess(big))).toThrow('no eligible call');
+    const big = { ...company, size: 'large' as const };
+    expect(() => buildPrompt(big, assess(big, 'en'), 'en')).toThrow('no eligible call');
   });
 });

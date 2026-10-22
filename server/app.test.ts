@@ -3,6 +3,7 @@ import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
 import { createApiServer, HttpError, type GenerateDraft } from './app';
 import { getFixture } from '../src/fixtures/companies';
+import { messages } from '../src/i18n/messages';
 import { getRecordingDraft } from './test-helpers';
 
 let server: Server | undefined;
@@ -28,14 +29,15 @@ const post = (base: string, body: unknown) =>
   });
 
 describe('POST /api/draft', () => {
-  const { company } = getFixture('kowadlo-precyzja');
+  const fixture = getFixture('kowadlo-precyzja');
+  const company = fixture.company.en;
 
   it('recomputes the rules server-side and returns the generated draft', async () => {
-    const draft = getRecordingDraft('kowadlo-precyzja');
+    const draft = getRecordingDraft('kowadlo-precyzja', 'en');
     const generate = vi.fn<GenerateDraft>().mockResolvedValue({ draft, model: 'claude-opus-5-5' });
     const base = await start(generate);
 
-    const res = await post(base, { company });
+    const res = await post(base, { company, lang: 'en' });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
       draft,
@@ -44,12 +46,34 @@ describe('POST /api/draft', () => {
     });
     expect(generate).toHaveBeenCalledOnce();
     expect(generate.mock.calls[0]![1].best?.callId).toBe('digit-2-2026');
+    expect(generate.mock.calls[0]![2]).toBe('en');
+  });
+
+  it('assesses and drafts in the requested language', async () => {
+    const generate = vi
+      .fn<GenerateDraft>()
+      .mockResolvedValue({ draft: getRecordingDraft('kowadlo-precyzja', 'pl'), model: 'm' });
+    const base = await start(generate);
+    const res = await post(base, { company: fixture.company.pl, lang: 'pl' });
+    expect(res.status).toBe(200);
+    const [, assessment, lang] = generate.mock.calls[0]!;
+    expect(lang).toBe('pl');
+    expect(assessment.best?.conditions[0]?.label).toBe(messages('pl').rules.sme.label);
+  });
+
+  it('defaults to English when no language is sent', async () => {
+    const generate = vi
+      .fn<GenerateDraft>()
+      .mockResolvedValue({ draft: getRecordingDraft('kowadlo-precyzja', 'en'), model: 'm' });
+    const base = await start(generate);
+    await post(base, { company });
+    expect(generate.mock.calls[0]![2]).toBe('en');
   });
 
   it('does not call the model when no call matches', async () => {
     const generate = vi.fn<GenerateDraft>();
     const base = await start(generate);
-    const res = await post(base, { company: { ...company, size: 'duza' } });
+    const res = await post(base, { company: { ...company, size: 'large' } });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ draft: null, model: null, bestCallId: null });
     expect(generate).not.toHaveBeenCalled();
@@ -58,10 +82,11 @@ describe('POST /api/draft', () => {
   it.each([
     ['malformed JSON', '{nope'],
     ['missing company', {}],
-    ['unknown industry', { company: { ...company, industry: 'rolnictwo' } }],
+    ['unknown industry', { company: { ...company, industry: 'agriculture' } }],
     ['negative years', { company: { ...company, closedFiscalYears: -1 } }],
     ['fractional years', { company: { ...company, closedFiscalYears: 2.5 } }],
     ['overlong description', { company: { ...company, description: 'x'.repeat(2001) } }],
+    ['unknown language', { company, lang: 'de' }],
   ])('rejects %s with 400', async (_name, body) => {
     const generate = vi.fn<GenerateDraft>();
     const base = await start(generate);
@@ -86,11 +111,11 @@ describe('POST /api/draft', () => {
 
   it('passes an HttpError status from the generator through to the client', async () => {
     const base = await start(
-      vi.fn<GenerateDraft>().mockRejectedValue(new HttpError(429, 'Limit zapytań')),
+      vi.fn<GenerateDraft>().mockRejectedValue(new HttpError(429, 'rate_limited', 'Rate limited')),
     );
     const res = await post(base, { company });
     expect(res.status).toBe(429);
-    expect(await res.json()).toEqual({ error: 'Limit zapytań' });
+    expect(await res.json()).toEqual({ error: 'Rate limited', code: 'rate_limited' });
   });
 
   it('rejects a body over 16 kB with 413', async () => {
@@ -107,6 +132,7 @@ describe('POST /api/draft', () => {
     expect(res.status).toBe(502);
     const text = await res.text();
     expect(text).not.toContain('sk-ant-secret');
+    expect(JSON.parse(text)).toMatchObject({ code: 'generation_failed' });
   });
 
   it('answers 404 for other paths and 405 for other methods', async () => {

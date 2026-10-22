@@ -1,4 +1,5 @@
 import { getCall, type FundingCall } from '../data/calls';
+import type { Lang } from '../i18n/lang';
 import type { CallMatch, CompanyProfile } from './types';
 
 /** JSON with object keys sorted at every depth, so equal values serialise equally. */
@@ -24,15 +25,16 @@ export function fnv1a(input: string): string {
 }
 
 /**
- * Identity of one assistant run: the company as entered, the rule result and the
- * matched call's data — everything the model saw. A recording is replayed only
+ * Identity of one assistant run: the language, the company as entered, the rule
+ * result and the matched call's data — everything the model saw. A recording is replayed only
  * when this hash matches, so a rule, call-data or fixture change can never
  * silently replay an outdated draft.
  */
 export function hashAssessmentInput(
   company: CompanyProfile,
   best: CallMatch | null,
-  call: FundingCall | null = best ? getCall(best.callId) : null,
+  lang: Lang,
+  call: FundingCall | null = best ? getCall(best.callId, lang) : null,
 ): string {
-  return fnv1a(canonicalJson({ company, best, call }));
+  return fnv1a(canonicalJson({ lang, company, best, call }));
 }

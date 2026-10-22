@@ -79,7 +79,8 @@ describe('design tokens meet WCAG AA (4.5:1 for body text)', () => {
     expect(fieldRule).toMatch(/border: var\(--border-width\) solid var\(--color-text-subtle\)/);
   });
 
-  it.each(['color-accent', 'color-accent-hover'])('button text on %s', (bg) => {
+  // The legal-notice icon and the active language button put dark text on these fills.
+  it.each(['color-accent', 'color-accent-hover', 'color-warning'])('dark text on %s', (bg) => {
     expect(contrast(token('color-on-accent'), token(bg))).toBeGreaterThanOrEqual(4.5);
   });
 });

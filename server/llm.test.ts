@@ -7,9 +7,9 @@ import { createGenerator, MODEL } from './llm';
 import { SYSTEM_PROMPT } from './prompt';
 import { getRecordingDraft } from './test-helpers';
 
-const { company } = getFixture('kowadlo-precyzja');
-const assessment = assess(company);
-const draft = getRecordingDraft('kowadlo-precyzja');
+const company = getFixture('kowadlo-precyzja').company.en;
+const assessment = assess(company, 'en');
+const draft = getRecordingDraft('kowadlo-precyzja', 'en');
 
 function fakeClient(parse: (...args: unknown[]) => Promise<unknown>) {
   return { beta: { messages: { parse: vi.fn(parse) } } } as unknown as Anthropic & {
@@ -28,7 +28,7 @@ describe('createGenerator', () => {
       parsed_output: draft,
       model: MODEL,
     }));
-    const result = await createGenerator(client)(company, assessment);
+    const result = await createGenerator(client)(company, assessment, 'en');
 
     expect(result).toEqual({ draft, model: MODEL });
     const params = client.beta.messages.parse.mock.calls[0]![0] as Record<string, unknown>;
@@ -38,25 +38,30 @@ describe('createGenerator', () => {
     expect(params['betas']).toEqual(['server-side-fallback-2026-07-01']);
     expect(params).not.toHaveProperty('thinking');
     expect((params['output_config'] as { effort: string }).effort).toBe('medium');
+    const messages = params['messages'] as { content: string }[];
+    expect(JSON.parse(messages[0]!.content)).toMatchObject({ outputLanguage: 'English' });
   });
 
   it('turns a refusal into a 502 without reading content', async () => {
     const client = fakeClient(async () => ({ stop_reason: 'refusal', parsed_output: null }));
-    await expect(createGenerator(client)(company, assessment)).rejects.toMatchObject({
+    await expect(createGenerator(client)(company, assessment, 'en')).rejects.toMatchObject({
       status: 502,
+      code: 'model_refused',
     });
   });
 
   it('turns a truncated answer into a 502', async () => {
     const client = fakeClient(async () => ({ stop_reason: 'max_tokens', parsed_output: draft }));
-    await expect(createGenerator(client)(company, assessment)).rejects.toBeInstanceOf(HttpError);
+    await expect(createGenerator(client)(company, assessment, 'en')).rejects.toBeInstanceOf(
+      HttpError,
+    );
   });
 
   it('explains a missing or wrong API key', async () => {
     const client = fakeClient(async () => {
       throw new Anthropic.AuthenticationError(401, undefined, 'invalid x-api-key', new Headers());
     });
-    await expect(createGenerator(client)(company, assessment)).rejects.toMatchObject({
+    await expect(createGenerator(client)(company, assessment, 'en')).rejects.toMatchObject({
       status: 500,
       message: expect.stringContaining('ANTHROPIC_API_KEY'),
     });
@@ -67,7 +72,7 @@ describe('createGenerator', () => {
     const client = fakeClient(async () => {
       throw new Anthropic.AnthropicError('Some other client-side problem.');
     });
-    await expect(createGenerator(client)(company, assessment)).rejects.not.toBeInstanceOf(
+    await expect(createGenerator(client)(company, assessment, 'en')).rejects.not.toBeInstanceOf(
       HttpError,
     );
   });
@@ -81,7 +86,7 @@ describe('createGenerator', () => {
         'Could not resolve authentication method. Expected one of apiKey, authToken, ...',
       );
     });
-    await expect(createGenerator(client)(company, assessment)).rejects.toMatchObject({
+    await expect(createGenerator(client)(company, assessment, 'en')).rejects.toMatchObject({
       status: 500,
       message: expect.stringContaining('ANTHROPIC_API_KEY'),
     });
@@ -91,7 +96,7 @@ describe('createGenerator', () => {
     const client = fakeClient(async () => {
       throw new Anthropic.RateLimitError(429, undefined, 'rate limited', new Headers());
     });
-    await expect(createGenerator(client)(company, assessment)).rejects.toMatchObject({
+    await expect(createGenerator(client)(company, assessment, 'en')).rejects.toMatchObject({
       status: 429,
     });
   });

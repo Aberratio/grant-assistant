@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "fixtureId": "ceramika-wartka",
+  "lang": "en",
+  "inputHash": "000b7441",
+  "bestCallId": "digit-2-2026",
+  "model": null,
+  "source": "prepared",
+  "recordedAt": "2026-10-22",
+  "draft": {
+    "title": "Predictive maintenance of tunnel kilns and automated production scheduling at Ceramika Wartka",
+    "summary": "Ceramika Wartka Sp. z o.o. plans to roll out predictive maintenance for its tunnel kilns and automated production scheduling. Dig.IT 2/2026 fits the company's profile, but two conditions — a positive net result and an available de minimis limit — must be confirmed before applying.",
+    "sections": [
+      {
+        "heading": "Problem and current situation",
+        "body": "The company (160 people) makes ceramic tiles. Its tunnel kilns break down unpredictably, and the production schedule is planned by hand in a spreadsheet.\n\n[To complete: number and duration of unplanned kiln stoppages and their cost over the last 12 months.]"
+      },
+      {
+        "heading": "Solution and project scope",
+        "body": "1. Collecting the tunnel kiln data needed to predict failures.\n2. An AI model that flags kiln failure risk to the maintenance team.\n3. An automated production scheduling tool to replace the spreadsheet.\n4. Team training — as an additional cost, within the 40% limit of eligible costs.\n\n[To complete: scope of the sensor installation and contractors selected on the basis of at least 3 quotes.]"
+      },
+      {
+        "heading": "Results and indicators",
+        "body": "Fewer unplanned kiln stoppages; the production schedule built automatically instead of in a spreadsheet.\n\n[To complete with baseline and target values: number of unplanned stoppages, time needed to prepare the schedule.]"
+      },
+      {
+        "heading": "Budget and schedule",
+        "body": "Dig.IT 2/2026: grant of PLN 150–850k, up to 50% of eligible costs, de minimis aid, reimbursed after the project ends. The grant may not exceed 30% of average annual net revenue over the last 3 years.\n\n[To complete: budget from the quotes, own contribution, schedule of stages 1–4.]"
+      }
+    ],
+    "documents": [
+      {
+        "name": "Financial statements for the last closed year",
+        "note": "Confirm the positive net result first — eligibility depends on it."
+      },
+      {
+        "name": "Summary of de minimis aid received in the last 3 years",
+        "note": "The grant is de minimis aid — it must fit within the available limit."
+      },
+      {
+        "name": "Grant application (annex 2)",
+        "note": "The project description from this draft, completed with baseline values and the budget."
+      },
+      {
+        "name": "Statement on financial statements (annex 4) and the statements for 5 closed fiscal years",
+        "note": "The company has 22 closed fiscal years — attach the statements for the last 5."
+      },
+      {
+        "name": "At least 3 price quotes",
+        "note": "For the sensors, the predictive model and the scheduling tool — best collected before the call opens on 2 November 2026."
+      },
+      {
+        "name": "BIG InfoMonitor and BIK authorisation (annex 5) and statement on paper documentation (annex 6)",
+        "note": "Templates in the ARP call documentation."
+      }
+    ],
+    "openQuestions": [
+      "Positive net result: no data on the net result for the last closed year — check the financial statements.",
+      "De minimis aid limit available: check de minimis aid received in the last 3 years in SUDOP — the grant must fit within the limit."
+    ]
+  }
+}

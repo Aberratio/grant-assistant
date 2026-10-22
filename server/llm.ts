@@ -12,8 +12,8 @@ import { buildPrompt } from './prompt';
 export const MODEL = 'claude-opus-5-5';
 
 export function createGenerator(client: Anthropic = new Anthropic()): GenerateDraft {
-  return async (company, assessment) => {
-    const prompt = buildPrompt(company, assessment);
+  return async (company, assessment, lang) => {
+    const prompt = buildPrompt(company, assessment, lang);
     try {
       const response = await client.beta.messages.parse({
         model: MODEL,
@@ -28,19 +28,27 @@ export function createGenerator(client: Anthropic = new Anthropic()): GenerateDr
       });
 
       if (response.stop_reason === 'refusal') {
-        throw new HttpError(502, 'Model odmówił przygotowania szkicu dla tych danych.');
+        throw new HttpError(502, 'model_refused', 'The model declined to draft for this input.');
       }
       if (response.stop_reason === 'max_tokens' || !response.parsed_output) {
-        throw new HttpError(502, 'Model nie zwrócił kompletnego szkicu. Spróbuj ponownie.');
+        throw new HttpError(
+          502,
+          'model_incomplete',
+          'The model did not return a complete draft. Try again.',
+        );
       }
       return { draft: response.parsed_output, model: response.model };
     } catch (error) {
       if (error instanceof HttpError) throw error;
       if (error instanceof Anthropic.AuthenticationError) {
-        throw new HttpError(500, 'Brak lub nieprawidłowy ANTHROPIC_API_KEY w pliku .env.');
+        throw new HttpError(
+          500,
+          'missing_api_key',
+          'ANTHROPIC_API_KEY in .env is missing or invalid.',
+        );
       }
       if (error instanceof Anthropic.RateLimitError) {
-        throw new HttpError(429, 'Limit zapytań do API — spróbuj za chwilę.');
+        throw new HttpError(429, 'rate_limited', 'API rate limit reached — try again in a moment.');
       }
       const noKey = !process.env['ANTHROPIC_API_KEY']?.trim();
       if (noKey && !(error instanceof Anthropic.APIError)) {
@@ -48,7 +56,8 @@ export function createGenerator(client: Anthropic = new Anthropic()): GenerateDr
         // (not an APIError), so an unanswered request plus no key means: missing key.
         throw new HttpError(
           500,
-          'Brak ANTHROPIC_API_KEY — skopiuj .env.example do .env i dodaj klucz.',
+          'missing_api_key',
+          'ANTHROPIC_API_KEY is not set — copy .env.example to .env and add the key.',
         );
       }
       throw error;

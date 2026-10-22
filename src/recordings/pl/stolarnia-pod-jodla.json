@@ -1,7 +1,8 @@
 {
   "version": 1,
   "fixtureId": "stolarnia-pod-jodla",
-  "inputHash": "23ec2777",
+  "lang": "pl",
+  "inputHash": "805f95b2",
   "bestCallId": "uslugi-rozwojowe-7-4a",
   "model": null,
   "source": "prepared",

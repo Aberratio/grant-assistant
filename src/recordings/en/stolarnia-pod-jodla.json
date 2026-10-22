@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "fixtureId": "stolarnia-pod-jodla",
+  "lang": "en",
+  "inputHash": "17c97d4a",
+  "bestCallId": "uslugi-rozwojowe-7-4a",
+  "model": null,
+  "source": "prepared",
+  "recordedAt": "2026-10-22",
+  "draft": {
+    "title": "Training the Stolarnia Pod Jodłą team in AI tools for quotes, offers and visualisations",
+    "summary": "Stolarnia Pod Jodłą, a micro-enterprise making custom furniture, plans to train its seven-person team in AI tools for preparing quotes, offer descriptions and simple visualisations. The training can be co-financed under the Usługi rozwojowe 7.4A FEDS project if it is selected from the Development Services Database (BUR).",
+    "sections": [
+      {
+        "heading": "Development need",
+        "body": "The company (7 people) makes custom furniture. Quotes and drawings are prepared by the owner in the evenings. The team is to learn to use AI tools for quotes, offer descriptions and simple visualisations.\n\n[To complete: how many offers the company prepares per month and how long one takes.]"
+      },
+      {
+        "heading": "Scope of development services",
+        "body": "1. Training in AI tools for offer descriptions and customer correspondence.\n2. Training in preparing quotes with AI tools.\n3. Training in simple furniture visualisations with AI tools.\n\nOnly services listed in the Development Services Database (BUR) are co-financed. [To complete: selected BUR services and their providers.]"
+      },
+      {
+        "heading": "Results",
+        "body": "Employees other than the owner prepare quotes and offer descriptions with the help of AI tools.\n\n[To complete: number of people trained, and baseline and target time to prepare an offer.]"
+      },
+      {
+        "heading": "Budget and schedule",
+        "body": "Usługi rozwojowe 7.4A FEDS: 50–70% co-financing, up to PLN 10k net per service and PLN 28k per agreement.\n\n[To complete: prices of the selected BUR services, own contribution, training dates.]"
+      }
+    ],
+    "documents": [
+      {
+        "name": "Company account and profile in the Development Services Database (BUR)",
+        "note": "Needed to select services and enrol employees."
+      },
+      {
+        "name": "Operator's application form (DAWG or a partner)",
+        "note": "Application to the 7.4A project for companies from Lower Silesia."
+      },
+      {
+        "name": "SME status declaration and summary of de minimis aid",
+        "note": "The company is a micro-enterprise and declares an available de minimis limit."
+      },
+      {
+        "name": "Selected BUR services (service cards)",
+        "note": "Check that the services cover the AI tools needed for quotes and offers."
+      }
+    ],
+    "openQuestions": [
+      "Does BUR offer AI tool training suitable for a furniture maker?",
+      "Dig.IT 2/2026 is not available: the company has 3 closed fiscal years, and the call requires at least 5."
+    ]
+  }
+}

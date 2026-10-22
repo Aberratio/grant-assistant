@@ -1,4 +1,6 @@
 /** The shape of a project-description draft, from Claude (live) or a recording. */
+import type { Lang } from '../i18n/lang';
+
 export interface DraftSection {
   heading: string;
   body: string;
@@ -17,7 +19,6 @@ export interface Draft {
   openQuestions: string[];
 }
 
-/** Where the draft on screen came from. */
 /**
  * How a recording was produced. 'api' = captured by `npm run record` (model is
  * the id the API reported); 'prepared' = written offline without an API call,
@@ -27,6 +28,7 @@ export type RecordingProvenance =
   | { source: 'api'; model: string; recordedAt: string }
   | { source: 'prepared'; model: null; recordedAt: string };
 
+/** Where the draft on screen came from. */
 export type DraftOrigin =
   | ({ kind: 'recording' } & RecordingProvenance)
   | { kind: 'template' }
@@ -35,7 +37,9 @@ export type DraftOrigin =
 export type Recording = RecordingProvenance & {
   version: 1;
   fixtureId: string;
-  /** hashAssessmentInput(company, best) at recording time — detects stale recordings. */
+  /** Language of the draft and of the input it was produced from. */
+  lang: Lang;
+  /** hashAssessmentInput(company, best, lang) at recording time — detects stale recordings. */
   inputHash: string;
   bestCallId: string;
   draft: Draft;

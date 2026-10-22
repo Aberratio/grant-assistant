@@ -205,6 +205,8 @@
 :root {
   --measure-lead: 48rem;
   --disclaimer-basis: 28rem;
+  --disclaimer-rule: 4px;
+  --lang-button-min: 2rem;
   --form-column-min: 20rem;
   --form-column-max: 24rem;
   --field-min: 9.5rem;

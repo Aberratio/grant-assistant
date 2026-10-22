@@ -1,4 +1,6 @@
-import { CALLS, DATA_STATE_AS_OF, getCall, type FundingCall } from '../data/calls';
+import { DATA_STATE_AS_OF, getCall, listCalls, type FundingCall } from '../data/calls';
+import { VOIVODESHIP_LABEL } from '../data/regions';
+import { API_ERROR_CODES, type ApiErrorCode } from '../domain/api';
 import type { Draft, DraftOrigin } from '../domain/draft';
 import { buildTimeline, type TimelineTarget } from '../domain/playback';
 import { assess, type Assessment } from '../domain/rules';
@@ -15,36 +17,25 @@ import {
   type CompanyProfile,
 } from '../domain/types';
 import { FIXTURES } from '../fixtures/companies';
+import { formatDate } from '../i18n/format';
+import { LANGS, searchWithLang, type Lang } from '../i18n/lang';
+import { messages, type Messages } from '../i18n/messages';
 import { findRecording } from '../recordings';
 import { h, paragraphs } from './dom';
 import { companyToEntries, parseCompany, type FormEntries } from './form-parse';
-import {
-  CONDITION_MARK,
-  DE_MINIMIS_LABEL,
-  INDUSTRY_LABEL,
-  MATCH_LABEL,
-  NEED_LABEL,
-  SIZE_LABEL,
-  VOIVODESHIP_LABEL,
-  formatDate,
-} from './labels';
 import type { AppMode } from './runtime';
 import logoUrl from '../assets/brand/logo.svg';
 
 export interface AppOptions {
   mode: AppMode;
   embed: boolean;
+  lang: Lang;
 }
 
-const DISCLAIMER =
-  'Wynik ma charakter informacyjny i nie stanowi porady prawnej ani gwarancji dotacji. ' +
-  `Reguły upraszczają warunki naborów, a dane naborów odpowiadają stanowi na ${formatDate(DATA_STATE_AS_OF)}. ` +
-  'Przed złożeniem wniosku zweryfikuj regulamin u źródła.';
+/** Language names in their own language, so each is recognisable to its readers. */
+const LANG_NAME: Record<Lang, string> = { en: 'English', pl: 'Polski' };
 
-export const MODE_LABEL: Record<AppMode, string> = {
-  recorded: 'Zapisany przebieg',
-  live: 'Na żywo (Claude API)',
-};
+const CONDITION_SYMBOL = { met: '✓', unmet: '✕', uncertain: '?' } as const;
 
 const prefersReducedMotion = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -87,12 +78,13 @@ function input(
   );
 }
 
-function buildForm(): HTMLFormElement {
+function buildForm(t: Messages, lang: Lang): HTMLFormElement {
+  const f = t.form;
   const descriptionId = 'f-description';
   return h(
     'form',
-    { class: 'company-form', novalidate: true, 'aria-label': 'Dane firmy' },
-    input('name', 'Nazwa firmy', {
+    { class: 'company-form', novalidate: true, 'aria-label': f.ariaLabel },
+    input('name', f.name, {
       type: 'text',
       required: true,
       maxlength: String(LIMITS.nameMaxLength),
@@ -101,14 +93,14 @@ function buildForm(): HTMLFormElement {
     h(
       'div',
       { class: 'field-row' },
-      select('industry', 'Branża', INDUSTRIES, INDUSTRY_LABEL),
-      select('size', 'Wielkość', COMPANY_SIZES, SIZE_LABEL),
+      select('industry', f.industry, INDUSTRIES, t.labels.industry),
+      select('size', f.size, COMPANY_SIZES, t.labels.size),
     ),
     h(
       'div',
       { class: 'field-row' },
-      select('voivodeship', 'Województwo', VOIVODESHIPS, VOIVODESHIP_LABEL),
-      input('closedFiscalYears', 'Zamknięte lata obrotowe', {
+      select('voivodeship', f.voivodeship, VOIVODESHIPS, VOIVODESHIP_LABEL[lang]),
+      input('closedFiscalYears', f.closedFiscalYears, {
         type: 'number',
         min: '0',
         max: String(LIMITS.maxClosedFiscalYears),
@@ -122,28 +114,28 @@ function buildForm(): HTMLFormElement {
       { class: 'field-row' },
       input(
         'netResultPln',
-        'Wynik netto (zł)',
-        { type: 'text', inputmode: 'decimal', placeholder: 'np. 250000 lub -40000' },
-        'Za ostatni zamknięty rok. Puste = nie wiem.',
+        f.netResult,
+        { type: 'text', inputmode: 'decimal', placeholder: f.netResultPlaceholder },
+        f.netResultHint,
       ),
-      select('deMinimisAvailable', 'Wolny limit de minimis?', DE_MINIMIS, DE_MINIMIS_LABEL),
+      select('deMinimisAvailable', f.deMinimis, DE_MINIMIS, t.labels.deMinimis),
     ),
-    select('need', 'Na co potrzebne są środki?', NEEDS, NEED_LABEL),
+    select('need', f.need, NEEDS, t.labels.need),
     h(
       'div',
       { class: 'field' },
-      h('label', { for: descriptionId }, 'Krótki opis potrzeby'),
+      h('label', { for: descriptionId }, f.description),
       h('textarea', {
         id: descriptionId,
         name: 'description',
         rows: '5',
         maxlength: String(LIMITS.descriptionMaxLength),
-        placeholder: 'Co dziś nie działa i co chcecie zmienić?',
+        placeholder: f.descriptionPlaceholder,
         'aria-describedby': `${descriptionId}-error`,
       }),
       h('p', { class: 'field-error', id: `${descriptionId}-error`, 'aria-live': 'polite' }),
     ),
-    h('button', { type: 'submit', class: 'btn-primary' }, 'Sprawdź dopasowanie'),
+    h('button', { type: 'submit', class: 'btn-primary' }, f.submit),
   );
 }
 
@@ -163,8 +155,8 @@ function readForm(form: HTMLFormElement): FormEntries {
   };
 }
 
-function fillForm(form: HTMLFormElement, company: CompanyProfile): void {
-  for (const [key, value] of Object.entries(companyToEntries(company))) {
+function fillForm(form: HTMLFormElement, entries: FormEntries): void {
+  for (const [key, value] of Object.entries(entries)) {
     const el = form.elements.namedItem(key);
     if (
       el instanceof HTMLInputElement ||
@@ -192,8 +184,6 @@ function showErrors(form: HTMLFormElement, errors: Partial<Record<string, string
   first?.focus();
 }
 
-const draftHeading = () => h('h2', {}, 'Szkic wniosku');
-
 function sourceLinks(call: FundingCall): (HTMLElement | string)[] {
   return call.sources.flatMap((s, i) => [
     i > 0 ? ' · ' : '',
@@ -201,7 +191,7 @@ function sourceLinks(call: FundingCall): (HTMLElement | string)[] {
   ]);
 }
 
-function conditionList(conditions: readonly ConditionResult[]): HTMLElement {
+function conditionList(t: Messages, conditions: readonly ConditionResult[]): HTMLElement {
   return h(
     'ul',
     { class: 'conditions' },
@@ -209,16 +199,12 @@ function conditionList(conditions: readonly ConditionResult[]): HTMLElement {
       h(
         'li',
         { class: `condition condition--${c.status}` },
-        h(
-          'span',
-          { class: 'condition-icon', 'aria-hidden': 'true' },
-          CONDITION_MARK[c.status].symbol,
-        ),
+        h('span', { class: 'condition-icon', 'aria-hidden': 'true' }, CONDITION_SYMBOL[c.status]),
         h(
           'div',
           {},
           h('span', { class: 'condition-label' }, c.label),
-          h('span', { class: 'visually-hidden' }, ` — ${CONDITION_MARK[c.status].label}. `),
+          h('span', { class: 'visually-hidden' }, ` — ${t.labels.condition[c.status]}. `),
           h('span', { class: 'condition-detail' }, c.detail),
         ),
       ),
@@ -226,15 +212,15 @@ function conditionList(conditions: readonly ConditionResult[]): HTMLElement {
   );
 }
 
-function matchCard(match: CallMatch, isBest: boolean): HTMLElement {
-  const call = getCall(match.callId);
+function matchCard(t: Messages, lang: Lang, match: CallMatch, isBest: boolean): HTMLElement {
+  const call = getCall(match.callId, lang);
   const compact = match.status === 'ineligible';
   const meta = h(
     'dl',
     { class: 'match-meta' },
-    h('dt', {}, 'Nabór'),
+    h('dt', {}, t.match.window),
     h('dd', {}, call.window),
-    h('dt', {}, 'Finansowanie'),
+    h('dt', {}, t.match.funding),
     h('dd', {}, call.funding),
   );
   const notes = [
@@ -243,9 +229,9 @@ function matchCard(match: CallMatch, isBest: boolean): HTMLElement {
       {},
       call.notes.map((n) => h('li', {}, n)),
     ),
-    h('p', { class: 'sources' }, 'Źródła: ', sourceLinks(call)),
+    h('p', { class: 'sources' }, t.match.sources, sourceLinks(call)),
   ];
-  const stateAsOf = `stan na ${formatDate(call.stateAsOf)}`;
+  const stateAsOf = t.match.stateAsOf(formatDate(call.stateAsOf, lang));
 
   return h(
     'article',
@@ -256,51 +242,60 @@ function matchCard(match: CallMatch, isBest: boolean): HTMLElement {
       h(
         'div',
         {},
-        isBest ? h('p', { class: 'eyebrow' }, 'Najlepsze dopasowanie') : null,
+        isBest ? h('p', { class: 'eyebrow' }, t.match.best) : null,
         h('h3', {}, call.name),
         h('p', { class: 'match-operator' }, call.operator),
       ),
-      h('span', { class: `badge badge--${match.status}` }, MATCH_LABEL[match.status]),
+      h('span', { class: `badge badge--${match.status}` }, t.labels.match[match.status]),
     ),
     compact
       ? [
-          conditionList(match.conditions.filter((c) => c.status === 'unmet')),
+          conditionList(
+            t,
+            match.conditions.filter((c) => c.status === 'unmet'),
+          ),
           h(
             'details',
             { class: 'match-notes' },
-            h('summary', {}, `Wszystkie warunki, uwagi i źródła (${stateAsOf})`),
+            h('summary', {}, t.match.allConditions(stateAsOf)),
             meta,
-            conditionList(match.conditions),
+            conditionList(t, match.conditions),
             notes,
           ),
         ]
       : [
           meta,
-          conditionList(match.conditions),
+          conditionList(t, match.conditions),
           h(
             'details',
             { class: 'match-notes' },
-            h('summary', {}, `Uwagi i źródła (${stateAsOf})`),
+            h('summary', {}, t.match.notesAndSources(stateAsOf)),
             notes,
           ),
         ],
   );
 }
 
-function originLabel(origin: DraftOrigin): string {
+function originLabel(t: Messages, lang: Lang, origin: DraftOrigin): string {
   switch (origin.kind) {
     case 'recording':
       return origin.source === 'api'
-        ? `${MODE_LABEL.recorded} · ${origin.model} · ${formatDate(origin.recordedAt)}`
-        : `${MODE_LABEL.recorded} · szkic przygotowany ${formatDate(origin.recordedAt)}`;
+        ? `${t.app.mode.recorded} · ${origin.model} · ${formatDate(origin.recordedAt, lang)}`
+        : `${t.app.mode.recorded} · ${t.draft.preparedOn(formatDate(origin.recordedAt, lang))}`;
     case 'template':
-      return 'Szablon · dane różnią się od zapisanych przykładów; szkic pisany przez Claude powstaje w trybie na żywo';
+      return t.draft.template;
     case 'live':
-      return `${MODE_LABEL.live} · ${origin.model}`;
+      return `${t.app.mode.live} · ${origin.model}`;
   }
 }
 
-function draftView(draft: Draft, origin: DraftOrigin, callName: string): HTMLElement {
+function draftView(
+  t: Messages,
+  lang: Lang,
+  draft: Draft,
+  origin: DraftOrigin,
+  callName: string,
+): HTMLElement {
   const part = (key: TimelineTarget, el: HTMLElement) => {
     el.dataset['part'] = key;
     return el;
@@ -309,8 +304,8 @@ function draftView(draft: Draft, origin: DraftOrigin, callName: string): HTMLEle
   return h(
     'div',
     { class: 'draft' },
-    h('p', { class: `origin origin--${origin.kind}` }, originLabel(origin)),
-    h('p', { class: 'eyebrow' }, `Szkic opisu projektu · ${callName}`),
+    h('p', { class: `origin origin--${origin.kind}` }, originLabel(t, lang, origin)),
+    h('p', { class: 'eyebrow' }, t.draft.eyebrow(callName)),
     h('h3', { class: 'draft-title' }, draft.title),
     part('summary', h('p', { class: 'draft-summary' }, draft.summary)),
     draft.sections.map((s, i) =>
@@ -324,7 +319,7 @@ function draftView(draft: Draft, origin: DraftOrigin, callName: string): HTMLEle
       h(
         'section',
         { class: 'draft-section' },
-        h('h4', {}, 'Dokumenty do przygotowania'),
+        h('h4', {}, t.draft.documents),
         h(
           'ol',
           { class: 'documents' },
@@ -340,7 +335,7 @@ function draftView(draft: Draft, origin: DraftOrigin, callName: string): HTMLEle
         ? h(
             'section',
             { class: 'draft-section draft-questions' },
-            h('h4', {}, 'Do sprawdzenia przed wnioskiem'),
+            h('h4', {}, t.draft.openQuestions),
             h(
               'ul',
               {},
@@ -352,20 +347,15 @@ function draftView(draft: Draft, origin: DraftOrigin, callName: string): HTMLEle
   );
 }
 
-function noMatchView(assessment: Assessment): HTMLElement {
+function noMatchView(t: Messages, lang: Lang, assessment: Assessment): HTMLElement {
   const closest = assessment.ranked[0];
-  const call = closest ? getCall(closest.callId) : null;
+  const call = closest ? getCall(closest.callId, lang) : null;
   const unmet = closest?.conditions.filter((c) => c.status === 'unmet') ?? [];
   return h(
     'div',
     { class: 'draft draft--empty' },
-    h('h3', {}, 'Brak naboru, którego warunki firma spełnia'),
-    h(
-      'p',
-      {},
-      'Szkic opisu powstaje tylko dla naboru bez niespełnionych warunków. ',
-      call ? `Najbliżej jest „${call.name}” — brakuje:` : '',
-    ),
+    h('h3', {}, t.noMatch.heading),
+    h('p', {}, t.noMatch.body, call ? t.noMatch.closest(call.name) : ''),
     h(
       'ul',
       {},
@@ -374,56 +364,73 @@ function noMatchView(assessment: Assessment): HTMLElement {
   );
 }
 
-async function fetchLiveDraft(company: CompanyProfile, signal: AbortSignal) {
+const isApiErrorCode = (code: unknown): code is ApiErrorCode =>
+  (API_ERROR_CODES as readonly unknown[]).includes(code);
+
+async function fetchLiveDraft(
+  t: Messages,
+  company: CompanyProfile,
+  lang: Lang,
+  signal: AbortSignal,
+) {
   let res: Response;
   try {
     res = await fetch('./api/draft', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ company }),
+      body: JSON.stringify({ company, lang }),
       signal,
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error;
-    throw new Error('Brak połączenia z serwerem API. Sprawdź, czy serwer jest uruchomiony.', {
-      cause: error,
-    });
+    throw new Error(t.live.noConnection, { cause: error });
   }
   const body = (await res.json().catch(() => ({}))) as {
     draft?: Draft | null;
     model?: string | null;
     error?: string;
+    code?: string;
   };
   if (!res.ok || !body.draft || !body.model) {
-    throw new Error(body.error ?? `Serwer zwrócił ${res.status}.`);
+    if (isApiErrorCode(body.code)) throw new Error(t.live.apiErrors[body.code]);
+    throw new Error(body.error ?? t.live.serverStatus(res.status));
   }
   return { draft: body.draft, model: body.model };
+}
+
+function setDocumentLanguage(t: Messages, lang: Lang): void {
+  document.documentElement.lang = lang;
+  document.title = t.meta.title;
+  document.querySelector('meta[name="description"]')?.setAttribute('content', t.meta.description);
 }
 
 export function mountApp(root: HTMLElement, options: AppOptions): void {
   document.documentElement.dataset['embed'] = options.embed ? '1' : '0';
 
-  const form = buildForm();
+  let lang = options.lang;
+  let t = messages(lang);
+  /** Preset whose data is in the form, or null once the visitor edits it. */
+  let fixtureId: string | null = null;
+  /** Whether the form has been run at least once (the switch then re-runs it). */
+  let hasRun = false;
+
+  let runId = 0;
+  let abort: AbortController | null = null;
+  const timers: number[] = [];
+
+  let form = buildForm(t, lang);
   const resultsList = h('div', { class: 'matches' });
   const draftPanel = h('div', {
     class: 'panel draft-panel',
     'aria-live': 'polite',
     'aria-busy': 'false',
   });
-  const presetButtons = FIXTURES.map((f) =>
-    h(
-      'button',
-      { type: 'button', class: 'preset', 'data-fixture': f.id, 'aria-pressed': 'false' },
-      f.label,
-    ),
-  );
+  let presetButtons: HTMLButtonElement[] = [];
 
-  let runId = 0;
-  let abort: AbortController | null = null;
-  const timers: number[] = [];
+  const draftHeading = () => h('h2', {}, t.app.draftHeading);
 
   const play = (draftEl: HTMLElement, draft: Draft) => {
-    timers.splice(0).forEach((t) => clearTimeout(t));
+    timers.splice(0).forEach((tm) => clearTimeout(tm));
     const steps = buildTimeline(draft, { reducedMotion: prefersReducedMotion() });
     for (const step of steps) {
       const el = draftEl.querySelector<HTMLElement>(`[data-part="${step.target}"]`);
@@ -435,31 +442,33 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
   };
 
   const showDraft = (draft: Draft, origin: DraftOrigin, callName: string) => {
-    const view = draftView(draft, origin, callName);
+    const view = draftView(t, lang, draft, origin, callName);
     draftPanel.replaceChildren(draftHeading(), view);
     play(view, draft);
   };
 
-  const run = async (company: CompanyProfile) => {
+  /** `draft: false` runs only the rules (used after a language switch in live mode). */
+  const run = async (company: CompanyProfile, { draft = true } = {}) => {
     const id = ++runId;
+    hasRun = true;
     abort?.abort();
-    timers.splice(0).forEach((t) => clearTimeout(t));
+    timers.splice(0).forEach((tm) => clearTimeout(tm));
     // A superseded live request skips its own reset (id !== runId), so reset here.
     draftPanel.setAttribute('aria-busy', 'false');
 
-    const assessment = assess(company);
+    const assessment = assess(company, lang);
     resultsList.replaceChildren(
-      ...assessment.ranked.map((m) => matchCard(m, m.callId === assessment.best?.callId)),
+      ...assessment.ranked.map((m) => matchCard(t, lang, m, m.callId === assessment.best?.callId)),
     );
 
     if (!assessment.best) {
-      draftPanel.replaceChildren(draftHeading(), noMatchView(assessment));
+      draftPanel.replaceChildren(draftHeading(), noMatchView(t, lang, assessment));
       return;
     }
-    const callName = getCall(assessment.best.callId).name;
+    const callName = getCall(assessment.best.callId, lang).name;
 
     if (options.mode === 'recorded') {
-      const recording = findRecording(company);
+      const recording = findRecording(company, lang);
       if (recording) {
         const origin: DraftOrigin =
           recording.source === 'api'
@@ -477,9 +486,17 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
               };
         showDraft(recording.draft, origin, callName);
       } else {
-        const draft = templateDraft(company, assessment);
-        if (draft) showDraft(draft, { kind: 'template' }, callName);
+        const fallback = templateDraft(company, assessment, lang);
+        if (fallback) showDraft(fallback, { kind: 'template' }, callName);
       }
+      return;
+    }
+
+    if (!draft) {
+      draftPanel.replaceChildren(
+        draftHeading(),
+        h('p', { class: 'draft-hint' }, t.draft.switchedLanguage),
+      );
       return;
     }
 
@@ -491,13 +508,13 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
         'p',
         { class: 'loading' },
         h('span', { class: 'spinner', 'aria-hidden': 'true' }),
-        'Claude pisze szkic na podstawie wyniku reguł…',
+        t.draft.loading,
       ),
     );
     try {
-      const { draft, model } = await fetchLiveDraft(company, abort.signal);
+      const result = await fetchLiveDraft(t, company, lang, abort.signal);
       if (id !== runId) return;
-      showDraft(draft, { kind: 'live', model }, callName);
+      showDraft(result.draft, { kind: 'live', model: result.model }, callName);
     } catch (error) {
       if (id !== runId || (error instanceof DOMException && error.name === 'AbortError')) return;
       draftPanel.replaceChildren(
@@ -505,7 +522,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
         h(
           'p',
           { class: 'error', role: 'alert' },
-          error instanceof Error ? error.message : 'Nieznany błąd.',
+          error instanceof Error ? error.message : t.live.unknownError,
         ),
       );
     } finally {
@@ -513,132 +530,225 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
     }
   };
 
-  const selectPreset = (fixtureId: string | null) => {
+  const selectPreset = (id: string | null) => {
+    fixtureId = id;
     for (const b of presetButtons)
-      b.setAttribute('aria-pressed', String(b.dataset['fixture'] === fixtureId));
+      b.setAttribute('aria-pressed', String(b.dataset['fixture'] === id));
   };
 
-  presetButtons.forEach((button) =>
-    button.addEventListener('click', () => {
-      const fixture = FIXTURES.find((f) => f.id === button.dataset['fixture']);
-      if (!fixture) return;
-      fillForm(form, fixture.company);
-      showErrors(form, {});
-      selectPreset(fixture.id);
-      void run(fixture.company);
-    }),
-  );
+  const runPreset = (id: string) => {
+    const fixture = FIXTURES.find((f) => f.id === id);
+    if (!fixture) return;
+    fillForm(form, companyToEntries(fixture.company[lang]));
+    showErrors(form, {});
+    selectPreset(fixture.id);
+    void run(fixture.company[lang]);
+  };
 
-  form.addEventListener('input', () => selectPreset(null));
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const parsed = parseCompany(readForm(form));
-    if (!parsed.ok) {
-      showErrors(form, parsed.errors);
+  const wireForm = () => {
+    form.addEventListener('input', () => selectPreset(null));
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const parsed = parseCompany(readForm(form), lang);
+      if (!parsed.ok) {
+        showErrors(form, parsed.errors);
+        return;
+      }
+      showErrors(form, {});
+      void run(parsed.company);
+    });
+  };
+
+  const switchLanguage = (next: Lang) => {
+    if (next === lang) return;
+    const entries = readForm(form);
+    lang = next;
+    t = messages(lang);
+    try {
+      history.replaceState(history.state, '', searchWithLang(location.search, lang));
+    } catch {
+      // Sandboxed iframes may forbid history changes; the switch still works.
+    }
+    render();
+    root.querySelector<HTMLElement>(`.lang-switch [data-lang="${lang}"]`)?.focus();
+
+    if (fixtureId) {
+      const fixture = FIXTURES.find((f) => f.id === fixtureId);
+      if (fixture) {
+        fillForm(form, companyToEntries(fixture.company[lang]));
+        selectPreset(fixture.id);
+        if (hasRun) void run(fixture.company[lang], { draft: options.mode === 'recorded' });
+      }
       return;
     }
-    showErrors(form, {});
-    void run(parsed.company);
-  });
+    // Edited input is kept as typed; enum values do not depend on the language.
+    fillForm(form, entries);
+    if (!hasRun) return;
+    const parsed = parseCompany(entries, lang);
+    if (parsed.ok) void run(parsed.company, { draft: options.mode === 'recorded' });
+    else showErrors(form, parsed.errors);
+  };
 
-  const modeBadge = h(
-    'span',
-    { class: `mode mode--${options.mode}`, title: 'Tryb działania' },
-    MODE_LABEL[options.mode],
-  );
-
-  root.replaceChildren(
+  const languageSwitch = () =>
     h(
       'div',
-      { class: 'shell' },
-      h(
-        'header',
-        { class: 'site-header' },
-        h(
-          'p',
-          { class: 'brand' },
-          h(
-            'a',
-            { href: 'https://kokot.it', target: '_blank', rel: 'noopener noreferrer' },
-            h('img', { class: 'brand-logo', src: logoUrl, alt: 'kokot.it' }),
-          ),
-        ),
-        h('h1', {}, 'Asystent wniosku dotacyjnego'),
-        h(
-          'p',
-          { class: 'lead' },
-          'Deterministyczne reguły sprawdzają, do których naborów UE firma pasuje i czego brakuje. Model AI dostaje wynik reguł i szkicuje opis projektu oraz listę dokumentów.',
-        ),
-      ),
+      { class: 'lang-switch', role: 'group', 'aria-label': t.app.languageLabel },
+      LANGS.map((code) => {
+        const button = h(
+          'button',
+          {
+            type: 'button',
+            lang: code,
+            'data-lang': code,
+            'aria-pressed': String(code === lang),
+            title: LANG_NAME[code],
+            'aria-label': LANG_NAME[code],
+          },
+          code.toUpperCase(),
+        );
+        button.addEventListener('click', () => switchLanguage(code));
+        return button;
+      }),
+    );
+
+  const render = () => {
+    setDocumentLanguage(t, lang);
+    timers.splice(0).forEach((tm) => clearTimeout(tm));
+    abort?.abort();
+    runId++;
+    form = buildForm(t, lang);
+    wireForm();
+    resultsList.replaceChildren();
+    draftPanel.setAttribute('aria-busy', 'false');
+    draftPanel.replaceChildren(draftHeading());
+
+    presetButtons = FIXTURES.map((f) => {
+      const button = h(
+        'button',
+        {
+          type: 'button',
+          class: 'preset',
+          'data-fixture': f.id,
+          'aria-pressed': String(f.id === fixtureId),
+        },
+        f.label[lang],
+      );
+      button.addEventListener('click', () => runPreset(f.id));
+      return button;
+    });
+
+    const dataDate = formatDate(DATA_STATE_AS_OF, lang);
+
+    root.replaceChildren(
       h(
         'div',
-        { class: 'topbar' },
-        h('p', { class: 'disclaimer', role: 'note' }, h('strong', {}, 'Informacja. '), DISCLAIMER),
-        modeBadge,
-      ),
-      h(
-        'main',
-        { class: 'layout' },
+        { class: 'shell' },
         h(
-          'section',
-          { class: 'panel form-panel', 'aria-labelledby': 'form-heading' },
-          h('h2', { id: 'form-heading' }, 'Firma'),
-          h('p', { class: 'presets-label', id: 'presets-label' }, 'Przykładowe firmy (fikcyjne):'),
-          h(
-            'div',
-            { class: 'presets', role: 'group', 'aria-labelledby': 'presets-label' },
-            presetButtons,
-          ),
-          form,
-        ),
-        h(
-          'div',
-          { class: 'results' },
-          h(
-            'section',
-            { class: 'panel', 'aria-labelledby': 'matches-heading' },
-            h('h2', { id: 'matches-heading' }, 'Dopasowane nabory'),
-            resultsList,
-          ),
-          draftPanel,
-        ),
-      ),
-      h(
-        'footer',
-        { class: 'site-footer' },
-        h('h2', {}, `Dane naborów — stan na ${formatDate(DATA_STATE_AS_OF)}`),
-        h(
-          'ul',
-          {},
-          CALLS.map((c) => h('li', {}, `${c.name}: `, sourceLinks(c))),
-        ),
-        h(
-          'div',
-          { class: 'footer-meta' },
-          h('p', { class: 'sample-data' }, 'Dane przykładowe · fikcyjne firmy'),
+          'header',
+          { class: 'site-header' },
           h(
             'p',
-            { class: 'byline' },
-            '© 2026 ',
+            { class: 'brand' },
             h(
               'a',
               { href: 'https://kokot.it', target: '_blank', rel: 'noopener noreferrer' },
-              'kokot.it',
+              h('img', { class: 'brand-logo', src: logoUrl, alt: 'kokot.it' }),
+            ),
+          ),
+          h('h1', {}, t.app.heading),
+          h('p', { class: 'lead' }, t.app.lead),
+        ),
+        h(
+          'div',
+          { class: 'topbar' },
+          h(
+            'aside',
+            { class: 'disclaimer', role: 'note', 'aria-labelledby': 'disclaimer-title' },
+            h('span', { class: 'disclaimer-icon', 'aria-hidden': 'true' }, '!'),
+            h(
+              'div',
+              {},
+              h('p', { class: 'disclaimer-title', id: 'disclaimer-title' }, t.app.disclaimerTitle),
+              h('p', { class: 'disclaimer-body' }, t.app.disclaimer(dataDate)),
+            ),
+          ),
+          h(
+            'div',
+            { class: 'topbar-meta' },
+            languageSwitch(),
+            h(
+              'span',
+              { class: `mode mode--${options.mode}`, title: t.app.modeTitle },
+              t.app.mode[options.mode],
+            ),
+          ),
+        ),
+        h(
+          'main',
+          { class: 'layout' },
+          h(
+            'section',
+            { class: 'panel form-panel', 'aria-labelledby': 'form-heading' },
+            h('h2', { id: 'form-heading' }, t.app.companyHeading),
+            h('p', { class: 'presets-label', id: 'presets-label' }, t.app.presetsLabel),
+            h(
+              'div',
+              { class: 'presets', role: 'group', 'aria-labelledby': 'presets-label' },
+              presetButtons,
+            ),
+            form,
+          ),
+          h(
+            'div',
+            { class: 'results' },
+            h(
+              'section',
+              { class: 'panel', 'aria-labelledby': 'matches-heading' },
+              h('h2', { id: 'matches-heading' }, t.app.matchesHeading),
+              resultsList,
+            ),
+            draftPanel,
+          ),
+        ),
+        h(
+          'footer',
+          { class: 'site-footer' },
+          h('h2', {}, t.app.footerHeading(dataDate)),
+          h(
+            'ul',
+            {},
+            listCalls(lang).map((c) => h('li', {}, `${c.name}: `, sourceLinks(c))),
+          ),
+          h(
+            'div',
+            { class: 'footer-meta' },
+            h('p', { class: 'sample-data' }, t.app.sampleData),
+            h(
+              'p',
+              { class: 'byline' },
+              '© 2026 ',
+              h(
+                'a',
+                { href: 'https://kokot.it', target: '_blank', rel: 'noopener noreferrer' },
+                'kokot.it',
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  };
 
+  render();
   if (options.embed) reportHeight(root);
 
   const first = FIXTURES[0];
   if (first) {
-    fillForm(form, first.company);
-    if (options.mode === 'recorded') {
+    // Live mode fills the form but waits for a submit: every live run costs an API call.
+    if (options.mode === 'recorded') runPreset(first.id);
+    else {
+      fillForm(form, companyToEntries(first.company[lang]));
       selectPreset(first.id);
-      void run(first.company);
     }
   }
 }
