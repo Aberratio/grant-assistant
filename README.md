@@ -8,7 +8,7 @@ Built for small manufacturers and the advisers who help them: deterministic rule
 which calls a company qualifies for and exactly which conditions it misses; Claude then
 drafts the project description and the document checklist for the best match.
 
-![Grant application assistant — recorded run, Dig.IT match](docs/screenshots/01-overview.png)
+![Grant application assistant — recorded run, Dig.IT match](docs/screenshots/en-01-overview.png)
 
 > **Not legal advice.** Results are informational and do not guarantee funding. The rules
 > simplify each call, and funding-call data reflects the state as of **21 October 2026**.
@@ -17,7 +17,7 @@ drafts the project description and the document checklist for the best match.
 ## Key features
 
 - **Explainable eligibility.** Every condition comes back as met / unmet / uncertain with a
-  reason, e.g. “brakuje 2 lat obrotowych” (two closed fiscal years short).
+  reason, e.g. “The company has 3 closed fiscal years — 2 short.”
 - **LLM kept out of the decision.** Rules are plain, unit-tested TypeScript; the model only
   writes the draft and is never asked to re-judge eligibility.
 - **Structured drafts.** Claude returns a schema-validated draft: title, summary, sections,
@@ -26,6 +26,9 @@ drafts the project description and the document checklist for the best match.
   static build) and a live mode that calls the Claude API from a local server.
 - **Source-linked call data.** Each call shows its window, funding terms, notes and links to
   the official pages.
+- **English and Polish.** Every interface text, rule explanation, legal notice, template and
+  recorded draft exists in both languages. The visitor switches with the EN / PL control;
+  the first visit follows the browser language (English otherwise), and `?lang=en|pl` pins it.
 - **Embeddable.** `?embed=1` renders minimal chrome for an iframe and reports its height to
   the parent page.
 - **Accessible and self-contained.** WCAG AA contrast enforced by tests, keyboard-friendly
@@ -34,11 +37,13 @@ drafts the project description and the document checklist for the best match.
 Funding calls covered: Dig.IT Transformacja cyfrowa 2/2026 (ARP), Innowacje dla STEP (ARAW),
 Usługi rozwojowe 7.4A FEDS (DAWG, BUR) and Ścieżka SMART MŚP (PARP).
 
-| Unmet condition                                             | Conditional match with open questions                           |
-| ----------------------------------------------------------- | --------------------------------------------------------------- |
-| ![Unmet condition](docs/screenshots/02-unmet-condition.png) | ![Conditional match](docs/screenshots/03-conditional-match.png) |
-| **Draft and documents**                                     | **Mobile**                                                      |
-| ![Draft and documents](docs/screenshots/04-draft.png)       | ![Mobile](docs/screenshots/06-mobile.png)                       |
+| Unmet condition                                                | Conditional match with open questions                              |
+| -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| ![Unmet condition](docs/screenshots/en-02-unmet-condition.png) | ![Conditional match](docs/screenshots/en-03-conditional-match.png) |
+| **Polish interface**                                           | **Draft and documents (Polish)**                                   |
+| ![Polish interface](docs/screenshots/pl-01-overview.png)       | ![Draft and documents](docs/screenshots/pl-04-draft.png)           |
+| **Mobile (English)**                                           | **Mobile (Polish)**                                                |
+| ![Mobile, English](docs/screenshots/en-06-mobile.png)          | ![Mobile, Polish](docs/screenshots/pl-06-mobile.png)               |
 
 ## Architecture
 
@@ -56,19 +61,20 @@ flowchart LR
 
 ```
 src/
-  data/calls.ts            funding calls: facts, documents, sources, "as of" date
+  data/calls.ts            funding calls in EN and PL: facts, documents, sources, "as of" date
+  i18n/                    EN and PL dictionaries, language detection, date and plural formatting
   domain/rules.ts          deterministic eligibility rules + ranking (no LLM)
   domain/hash.ts           canonical JSON + FNV-1a: identity of a run
   domain/playback.ts       deterministic reveal timeline for recorded drafts
   domain/template-draft.ts labelled template draft for edited input in recorded mode
-  fixtures/companies.ts    four fictional sample companies
-  recordings/*.json        recorded runs, replayed by input hash
+  fixtures/companies.ts    four fictional sample companies, each in EN and PL
+  recordings/<lang>/*.json recorded runs per language, replayed by input hash
   ui/                      vanilla TypeScript + DOM; text set via text nodes only
 server/
   app.ts                   127.0.0.1 HTTP API: validate → rules → generate
   llm.ts                   the only module that calls Claude
   prompt.ts                fixed system prompt + per-request JSON payload
-scripts/                   dev-live, record, screenshots, wording guard
+scripts/                   dev-live, record, screenshots, wording and language guards
 ```
 
 Design decisions — ranking, rule edge cases, recordings and the security boundary — are in
@@ -110,20 +116,22 @@ npm run preview
 **Recording new runs:**
 
 ```bash
-npm run record                       # all sample companies
+npm run record                       # all sample companies, both languages
 npm run record -- kowadlo-precyzja   # one company
+npm run record -- --lang pl          # one language
 ```
 
-`record` runs the live pipeline for the fixtures and overwrites `src/recordings/<id>.json`.
-Each recording stores a hash of its input, the rule result and the matched call's data; the
-test suite fails if a rule, call or fixture change makes a recording stale.
+`record` runs the live pipeline for the fixtures and overwrites
+`src/recordings/<lang>/<id>.json`. Each recording stores a hash of its language, input, rule
+result and the matched call's data; the test suite fails if a rule, call, translation or
+fixture change makes a recording stale.
 
 **Embedding:**
 
 ```html
 <iframe
-  src="https://<host>/grant-assistant/?embed=1"
-  title="Asystent wniosku dotacyjnego"
+  src="https://<host>/grant-assistant/?embed=1&lang=en"
+  title="Grant application assistant"
   style="width: 100%; border: 0; min-height: 900px"
   loading="lazy"
 ></iframe>
@@ -132,14 +140,15 @@ test suite fails if a rule, call or fixture change makes a recording stale.
   addEventListener('message', (e) => {
     if (e.origin !== 'https://<host>') return;
     if (e.data?.type === 'grant-assistant:height') {
-      document.querySelector('iframe[title^="Asystent"]').style.height = `${e.data.height}px`;
+      document.querySelector('iframe[title^="Grant"]').style.height = `${e.data.height}px`;
     }
   });
 </script>
 ```
 
-`?embed=1` hides the page header; the disclaimer, the mode label and the footer with the
-source links stay visible.
+`?embed=1` hides the page header; the legal notice, the language switch, the mode label and
+the footer with the source links stay visible. Add `&lang=pl` or `&lang=en` to fix the
+language of the embed; without it the visitor's browser language decides.
 
 ## Configuration
 
@@ -154,15 +163,17 @@ Static builds need no configuration and always use recorded runs.
 
 ```bash
 npm run lint            # ESLint (typescript-eslint strict) + Prettier check
+npm run check:language  # no Polish outside the PL dictionary and the data
 npm run typecheck       # strict tsc, browser and Node configs
-npm test                # Vitest: 187 tests
+npm test                # Vitest: 296 tests
 npm run build
 npm run check:wording   # scans dist/ and the docs for wording that must not ship
 ```
 
 The suite covers rule boundaries (4 vs 5 fiscal years; result −1 / 0 / 1 / unknown; every
 sector and size; de minimis answers), ranking, hashing (FNV reference vectors), recording
-freshness and deterministic replay, prompt contents, WCAG AA contrast of every token pair,
+freshness and deterministic replay in both languages, dictionary key parity, language
+detection, prompt contents, WCAG AA contrast of every token pair,
 the HTTP API (validation, size limit, hidden error details, no model call without a match),
 the Claude wrapper against a fake client, and the full UI flow in a DOM (jsdom). There are
 no browser end-to-end tests; screenshots are produced with Playwright by
@@ -188,7 +199,8 @@ SHA-pinned actions.
 - **Funding-call data is a snapshot as of 21 October 2026**, checked on the official pages
   linked below and in the app. Windows and conditions change.
 - The committed recordings were prepared offline in the exact output shape of the live mode,
-  under the same rules as the live prompt, and are labelled as prepared in the app.
+  under the same rules as the live prompt, in English and Polish, and are labelled as
+  prepared in the app.
   `npm run record` with an API key replaces them with captured runs.
 
 | Call                                          | Operator          | Source                                                                                                                                                                                                                                                          |
@@ -205,7 +217,8 @@ SHA-pinned actions.
   the call regulations and should be confirmed there.
 - Company size is self-declared; the full SME test (headcount, turnover, linked
   enterprises) is not checked.
-- The interface is in Polish.
+- The English call text is a working translation; the Polish call regulations are
+  authoritative.
 
 ## Disclaimer
 
