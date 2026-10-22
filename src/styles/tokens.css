@@ -198,7 +198,7 @@
  * ---- grant-assistant only ------------------------------------------------------
  * Everything above is a verbatim copy of kokot-it/src/styles/tokens.css (brand
  * system, 2026-10-21); replace it wholesale when the brand changes. Below: layout
- * sizes and motion aliases this demo needs, built from brand tokens where possible.
+ * sizes and motion aliases this app needs, built from brand tokens where possible.
  * (The 960px two-column breakpoint lives in app.css: custom properties cannot be
  * used inside media queries.)
  */

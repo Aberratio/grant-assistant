@@ -97,17 +97,8 @@ p {
   vertical-align: middle;
 }
 
-.byline {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-}
-
-.byline-logo {
-  height: calc(var(--logo-height) * 0.7);
-  width: auto;
+.brand a {
+  display: inline-block;
 }
 
 .lead {
@@ -118,39 +109,47 @@ p {
 .topbar {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--space-3);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
   margin: var(--space-5) 0;
 }
 
 .disclaimer {
   flex: 1 1 var(--disclaimer-basis);
+  max-width: var(--measure-lead);
   margin: 0;
-  padding: var(--space-3) var(--space-4);
-  border: var(--border-width) solid var(--color-warning);
-  border-left-width: 4px;
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--color-line);
   font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
 .disclaimer strong {
-  color: var(--color-warning);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
 }
 
 .mode {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  padding: var(--space-1) var(--space-3);
-  border: var(--border-width) solid var(--color-line);
-  border-radius: var(--radius-pill);
   color: var(--color-text-muted);
   white-space: nowrap;
 }
 
-.mode--live {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+.mode::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+
+.mode--live::before {
+  background: var(--color-accent);
 }
 
 /* Layout */
@@ -393,6 +392,40 @@ p {
   margin: 0;
 }
 
+/* Narrow screens: give titles the full card width and stack label/value pairs. */
+@media (max-width: 559px) {
+  .panel {
+    padding: var(--space-4);
+  }
+
+  .match {
+    padding: var(--space-3);
+  }
+
+  .match-header {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+
+  .match-header .badge {
+    order: -1;
+    justify-self: start;
+  }
+
+  .match-meta {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .match-meta dd + dt {
+    margin-top: var(--space-2);
+  }
+
+  .footer-meta {
+    flex-direction: column;
+  }
+}
+
 .conditions {
   list-style: none;
   padding: 0;
@@ -552,7 +585,21 @@ p {
   padding-left: var(--space-5);
 }
 
-/* Embed (?embed=1): minimal chrome for the kokot.it iframe. The page header goes;
+.footer-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-5);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.footer-meta p {
+  margin: 0;
+}
+
+/* Embed (?embed=1): minimal chrome for an iframe. The page header goes;
    the disclaimer and the footer with the source links stay. */
 [data-embed='1'] .site-header {
   display: none;

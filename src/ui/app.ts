@@ -37,8 +37,14 @@ export interface AppOptions {
 }
 
 const DISCLAIMER =
-  'To demo, a nie porada prawna ani gwarancja dotacji. Reguły są uproszczone, a dane naborów pochodzą ' +
-  `ze stanu na ${formatDate(DATA_STATE_AS_OF)} — przed złożeniem wniosku sprawdź regulamin u źródła.`;
+  'Wynik ma charakter informacyjny i nie stanowi porady prawnej ani gwarancji dotacji. ' +
+  `Reguły upraszczają warunki naborów, a dane naborów odpowiadają stanowi na ${formatDate(DATA_STATE_AS_OF)}. ` +
+  'Przed złożeniem wniosku zweryfikuj regulamin u źródła.';
+
+export const MODE_LABEL: Record<AppMode, string> = {
+  recorded: 'Zapisany przebieg',
+  live: 'Na żywo (Claude API)',
+};
 
 const prefersReducedMotion = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -116,9 +122,9 @@ function buildForm(): HTMLFormElement {
       { class: 'field-row' },
       input(
         'netResultPln',
-        'Wynik netto za ostatni rok (zł)',
+        'Wynik netto (zł)',
         { type: 'text', inputmode: 'decimal', placeholder: 'np. 250000 lub -40000' },
-        'Puste = nie wiem.',
+        'Za ostatni zamknięty rok. Puste = nie wiem.',
       ),
       select('deMinimisAvailable', 'Wolny limit de minimis?', DE_MINIMIS, DE_MINIMIS_LABEL),
     ),
@@ -285,12 +291,12 @@ function originLabel(origin: DraftOrigin): string {
   switch (origin.kind) {
     case 'recording':
       return origin.source === 'api'
-        ? `Nagranie przebiegu ${origin.model} z ${formatDate(origin.recordedAt)} — odtwarzane deterministycznie`
-        : `Nagranie (szkic przygotowany offline ${formatDate(origin.recordedAt)}) — odtwarzane deterministycznie`;
+        ? `${MODE_LABEL.recorded} · ${origin.model} · ${formatDate(origin.recordedAt)}`
+        : `${MODE_LABEL.recorded} · szkic przygotowany ${formatDate(origin.recordedAt)}`;
     case 'template':
-      return 'Szablon — dane różnią się od nagranych przykładów; szkic pisany przez AI działa w trybie live (npm run dev:live)';
+      return 'Szablon · dane różnią się od zapisanych przykładów; szkic pisany przez Claude powstaje w trybie na żywo';
     case 'live':
-      return `Na żywo — ${origin.model}`;
+      return `${MODE_LABEL.live} · ${origin.model}`;
   }
 }
 
@@ -379,7 +385,7 @@ async function fetchLiveDraft(company: CompanyProfile, signal: AbortSignal) {
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error;
-    throw new Error('Brak połączenia z lokalnym serwerem API — czy działa npm run dev:live?', {
+    throw new Error('Brak połączenia z serwerem API. Sprawdź, czy serwer jest uruchomiony.', {
       cause: error,
     });
   }
@@ -535,10 +541,11 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
     void run(parsed.company);
   });
 
-  const modeBadge =
-    options.mode === 'live'
-      ? h('span', { class: 'mode mode--live' }, 'tryb live · Claude API')
-      : h('span', { class: 'mode' }, 'tryb nagrany · bez API');
+  const modeBadge = h(
+    'span',
+    { class: `mode mode--${options.mode}`, title: 'Tryb działania' },
+    MODE_LABEL[options.mode],
+  );
 
   root.replaceChildren(
     h(
@@ -550,8 +557,11 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
         h(
           'p',
           { class: 'brand' },
-          h('img', { class: 'brand-logo', src: logoUrl, alt: 'kokot.it' }),
-          ' / projekty pokazowe',
+          h(
+            'a',
+            { href: 'https://kokot.it', target: '_blank', rel: 'noopener noreferrer' },
+            h('img', { class: 'brand-logo', src: logoUrl, alt: 'kokot.it' }),
+          ),
         ),
         h('h1', {}, 'Asystent wniosku dotacyjnego'),
         h(
@@ -563,12 +573,7 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
       h(
         'div',
         { class: 'topbar' },
-        h(
-          'p',
-          { class: 'disclaimer', role: 'note' },
-          h('strong', {}, 'Zastrzeżenie: '),
-          DISCLAIMER,
-        ),
+        h('p', { class: 'disclaimer', role: 'note' }, h('strong', {}, 'Informacja. '), DISCLAIMER),
         modeBadge,
       ),
       h(
@@ -607,12 +612,20 @@ export function mountApp(root: HTMLElement, options: AppOptions): void {
           {},
           CALLS.map((c) => h('li', {}, `${c.name}: `, sourceLinks(c))),
         ),
-        h('p', {}, 'Wszystkie przykładowe firmy są fikcyjne. ' + DISCLAIMER),
         h(
-          'p',
-          { class: 'byline' },
-          'Projekt pokazowy · by ',
-          h('img', { class: 'byline-logo', src: logoUrl, alt: 'kokot.it' }),
+          'div',
+          { class: 'footer-meta' },
+          h('p', { class: 'sample-data' }, 'Dane przykładowe · fikcyjne firmy'),
+          h(
+            'p',
+            { class: 'byline' },
+            '© 2026 ',
+            h(
+              'a',
+              { href: 'https://kokot.it', target: '_blank', rel: 'noopener noreferrer' },
+              'kokot.it',
+            ),
+          ),
         ),
       ),
     ),
