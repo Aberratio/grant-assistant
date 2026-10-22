@@ -50,7 +50,6 @@ try {
 
   const mobile = await open('', 375, 812);
   await mobile.screenshot({ path: `${OUT}/06-mobile.png` });
-  await mobile.screenshot({ path: `${OUT}/06-mobile-full.png`, fullPage: true });
   await mobile.close();
 
   console.log(`[screenshots] written to ${OUT}/`);
