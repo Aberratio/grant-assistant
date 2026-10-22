@@ -20,7 +20,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "record": "tsx scripts/record.ts",
     "screenshots": "tsx scripts/screenshots.ts",
-    "check:wording": "tsx scripts/check-wording.ts"
+    "check:wording": "tsx scripts/check-wording.ts",
+    "check:language": "tsx scripts/check-language.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.137.0",
